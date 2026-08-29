@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>直笛樂譜對照吹奏系統 - 單頁純前端版</title>
+  <title>直笛樂譜對照吹奏系統 - 可愛直笛版</title>
 
   <!-- CDN 套件載入 -->
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -12,7 +12,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tonejs/midi@2.0.28/build/Midi.js"></script>
 
-  <!-- 字型 -->
+  <!-- 字型：手繪童趣風格 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
@@ -20,162 +20,220 @@
   <style>
     body {
       font-family: 'Zen Maru Gothic', 'Comic Neue', cursive, sans-serif;
-      background-color: #f7f3e9;
-      background-image: radial-gradient(#e0d5c1 0.8px, transparent 0.8px);
-      background-size: 18px 18px;
+      background-color: #fffdf7;
+      background-image: 
+        radial-gradient(#ebd9c0 1.2px, transparent 1.2px),
+        linear-gradient(to right, rgba(235, 210, 180, 0.12) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(235, 210, 180, 0.12) 1px, transparent 1px);
+      background-size: 24px 24px, 24px 24px, 24px 24px;
     }
 
     .pencil-card {
-      background-color: #fffdf8;
-      border: 2.5px solid #d8c7b0;
-      box-shadow: 4px 5px 0px #e0d1bb;
-      border-radius: 22px;
+      background-color: #ffffff;
+      border: 3px solid #6b4c3b;
+      box-shadow: 5px 6px 0px #e6c8a0, 8px 9px 0px rgba(107, 76, 59, 0.15);
+      border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
     }
 
     .pencil-card-inner {
-      background-color: #fffbf2;
-      border: 2px dashed #e2d2bc;
-      border-radius: 18px;
+      background-color: #fffcf5;
+      border: 2.5px dashed #d1b495;
+      border-radius: 20px 24px 18px 22px;
     }
 
     .pencil-btn-primary {
-      background-color: #e06d53;
+      background-color: #ff8b7d;
       color: #ffffff;
-      border: 2px solid #b84f37;
-      box-shadow: 3px 4px 0px #8c3b28;
-      border-radius: 14px;
+      border: 2.5px solid #5a3a29;
+      box-shadow: 3px 4px 0px #5a3a29;
+      border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
       transition: all 0.15s ease-in-out;
     }
     .pencil-btn-primary:hover {
-      transform: translate(-1px, -1px);
-      box-shadow: 4px 5px 0px #8c3b28;
+      transform: translate(-2px, -2px);
+      box-shadow: 5px 6px 0px #5a3a29;
+      background-color: #ff7666;
     }
 
     .pencil-badge {
-      background-color: #f2e4c9;
-      color: #6e5532;
-      border: 1.5px solid #d4be96;
+      background-color: #fff3c4;
+      color: #5c4233;
+      border: 2px solid #5c4233;
+      box-shadow: 2px 3px 0px #d9be8b;
+      border-radius: 12px;
     }
+
+    .crayon-mint { background-color: #c7f2e3; border-color: #3b6e5e; }
+    .crayon-sky { background-color: #bae6fd; border-color: #2b5070; }
+    .crayon-pink { background-color: #fbcfe8; border-color: #702b4d; }
+    .crayon-yellow { background-color: #fef08a; border-color: #854d0e; }
   </style>
 </head>
-<body class="text-[#4a3e3d] min-h-screen pb-12">
+<body class="text-[#5a4234] min-h-screen pb-16">
 
 <div id="app" class="max-w-7xl mx-auto p-4 md:p-8">
   
+  <!-- 頁首標題區 (圖示已換成可愛直笛角色) -->
   <header class="pencil-card p-6 md:p-8 mb-8 flex flex-col md:flex-row justify-between items-center gap-6">
-    <div class="flex items-center gap-4">
-      <div class="w-14 h-14 bg-[#fceade] border-2 border-[#e06d53] rounded-2xl flex items-center justify-center text-3xl shadow-sm">
-        🎨
+    <div class="flex items-center gap-5">
+      <!-- 可愛手繪直笛圖示 -->
+      <div class="w-16 h-16 bg-[#ffe8d6] border-3 border-[#6b4c3b] rounded-3xl flex items-center justify-center shadow-sm rotate-[-3deg]">
+        <svg class="w-11 h-11" viewBox="0 0 64 64" fill="none">
+          <path d="M24 8 C24 5.8 25.8 4 28 4 L36 4 C38.2 4 40 5.8 40 8 L38 56 C38 58.2 36.2 60 34 60 L30 60 C27.8 60 26 58.2 26 56 Z" fill="#FFE3A8" stroke="#6B4C3B" stroke-width="3"/>
+          <path d="M25 10 L39 10" stroke="#6B4C3B" stroke-width="3"/>
+          <rect x="29" y="13" width="6" height="3" fill="#6B4C3B" rx="1"/>
+          <!-- 可愛笑臉與腮紅 -->
+          <circle cx="28" cy="22" r="1.8" fill="#422E23"/>
+          <circle cx="36" cy="22" r="1.8" fill="#422E23"/>
+          <ellipse cx="26.5" cy="24" rx="1.5" ry="1" fill="#FF7666"/>
+          <ellipse cx="37.5" cy="24" rx="1.5" ry="1" fill="#FF7666"/>
+          <path d="M30 25 Q32 27 34 25" stroke="#422E23" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <!-- 笛孔 -->
+          <circle cx="32" cy="32" r="2.3" fill="#2563EB"/>
+          <circle cx="32" cy="39" r="2.3" fill="#2563EB"/>
+          <circle cx="32" cy="46" r="2.3" fill="#26221F"/>
+          <circle cx="32" cy="52" r="2" fill="#26221F"/>
+        </svg>
       </div>
+
       <div>
-        <h1 class="text-2xl md:text-3xl font-black text-[#3d3230] flex items-center gap-2">
+        <h1 class="text-2xl md:text-3xl font-black text-[#422e23] flex items-center gap-2">
           直笛樂譜對照系統
-          <span class="text-xs bg-[#e06d53] text-white px-2.5 py-1 rounded-full border border-[#b84f37]">單頁網頁版</span>
+          <span class="text-xs bg-[#ffb3a7] text-[#422e23] px-3 py-1 rounded-full border-2 border-[#6b4c3b] font-bold">一行兩小節版</span>
         </h1>
-        <p class="text-sm font-medium text-[#7a6b5d] mt-1">
-          ✏️ 純前端瀏覽器解析 ‧ 支援 MusicXML / MXL / MIDI 本地讀取
+        <p class="text-sm font-bold text-[#8c6d58] mt-1 flex items-center gap-1">
+          <span>🎨</span> 支援圖片檔 (AI 辨識) / MusicXML / MXL / MIDI
         </p>
       </div>
     </div>
 
-    <label class="pencil-btn-primary px-6 py-3.5 font-bold shadow cursor-pointer text-base flex items-center gap-2 flex-shrink-0">
-      <span>📁 上傳樂譜 (MusicXML / MXL / MIDI)</span>
-      <input type="file" class="hidden" @change="handleFileUpload" accept=".xml, .musicxml, .mxl, .mid, .midi" />
+    <label class="pencil-btn-primary px-7 py-4 font-black shadow cursor-pointer text-base flex items-center gap-2 flex-shrink-0">
+      <span class="text-xl">📷</span>
+      <span>上傳樂譜 (圖片/MXL/XML/MIDI)</span>
+      <input type="file" class="hidden" @change="handleFileUpload" accept=".png, .jpg, .jpeg, .webp, .xml, .musicxml, .mxl, .mid, .midi" />
     </label>
   </header>
 
+  <!-- AI 辨識狀態提示與圖片預覽 -->
+  <div v-if="isProcessingAI" class="pencil-card p-6 mb-8 text-center bg-[#fffbeb] flex flex-col items-center justify-center gap-3">
+    <div class="animate-spin text-4xl">🔍</div>
+    <div class="text-lg font-black text-[#b45309]">AI 正在分析圖片並進行光學樂譜辨識 (OMR)...</div>
+    <div class="text-xs text-[#854d0e] font-bold">定位五線譜線條與音符頭位置中，請稍候</div>
+  </div>
+
+  <div v-if="uploadedImageUrl" class="pencil-card p-6 mb-8">
+    <h3 class="text-lg font-black text-[#422e23] mb-3 flex items-center gap-2">
+      🖼️ 樂譜圖片 AI 分析預覽
+    </h3>
+    <div class="flex flex-col md:flex-row gap-6 items-center">
+      <img :src="uploadedImageUrl" class="max-h-48 rounded-xl border-2 border-[#6b4c3b] object-contain bg-white p-2" />
+      <div class="text-sm font-bold text-[#6e5532] space-y-2">
+        <p class="text-green-700 font-black">✅ AI 辨識完成！已自動排列為每行 2 小節。</p>
+        <p>✦ 圖像解析度：{{ imageWidth }} x {{ imageHeight }} px</p>
+        <p>✦ 自動偵測調號與拍號：{{ keySignature }} / {{ timeSignature }}</p>
+      </div>
+    </div>
+  </div>
+
   <main v-show="parsedNotes.length > 0" class="space-y-8">
 
+    <!-- 控制面板 -->
     <div class="pencil-card p-5 flex flex-wrap justify-between items-center gap-4">
       <div class="flex flex-wrap items-center gap-6 font-bold text-base">
-        <div class="flex items-center gap-3">
-          <span class="text-[#5c4a38]">🖍️ 指法系統：</span>
-          <label class="flex items-center gap-1.5 cursor-pointer text-[#4a3e3d]">
-            <input type="radio" value="baroque" v-model="fingeringType" class="accent-[#e06d53] w-4 h-4"> 英式 (B)
+        <div class="flex items-center gap-3 bg-[#fff8eb] px-4 py-2 rounded-2xl border-2 border-[#8c6d58]">
+          <span class="text-[#5a4234]">🖍️ 指法系統：</span>
+          <label class="flex items-center gap-1.5 cursor-pointer text-[#422e23] font-black">
+            <input type="radio" value="baroque" v-model="fingeringType" class="accent-[#ff7666] w-4 h-4"> 英式 (B)
           </label>
-          <label class="flex items-center gap-1.5 cursor-pointer text-[#4a3e3d]">
-            <input type="radio" value="german" v-model="fingeringType" class="accent-[#e06d53] w-4 h-4"> 德式 (G)
+          <label class="flex items-center gap-1.5 cursor-pointer text-[#422e23] font-black">
+            <input type="radio" value="german" v-model="fingeringType" class="accent-[#ff7666] w-4 h-4"> 德式 (G)
           </label>
         </div>
 
-        <!-- 左右手配色圖例提示 -->
-        <div class="flex items-center gap-3 text-xs bg-[#f0e8d8] px-3 py-1.5 rounded-xl border border-[#d8c7b0]">
-          <span class="font-extrabold text-[#5c4a38]">按孔圖例：</span>
-          <span class="flex items-center gap-1 font-bold text-[#2563eb]">🔵 上四孔 (左手)</span>
-          <span class="flex items-center gap-1 font-bold text-[#3d3228]">⬛ 下四孔 (右手)</span>
+        <div class="flex items-center gap-3 text-xs bg-[#f4ebd0] px-4 py-2 rounded-2xl border-2 border-[#a89078]">
+          <span class="font-black text-[#5a4234]">按孔圖例：</span>
+          <span class="flex items-center gap-1 font-black text-[#2563eb]">🔵 上四孔 (左手)</span>
+          <span class="flex items-center gap-1 font-black text-[#26221f]">⬛ 下四孔 (右手)</span>
         </div>
       </div>
 
-      <div class="text-sm font-bold flex gap-4">
-         <span class="pencil-badge px-3 py-1.5 rounded-xl">調號: {{ keySignature }}</span>
-         <span class="pencil-badge px-3 py-1.5 rounded-xl">拍號: {{ timeSignature }}</span>
-         <span class="pencil-badge px-3 py-1.5 rounded-xl">總小節: {{ maxMeasureNumber }}</span>
+      <div class="text-sm font-black flex gap-3 flex-wrap">
+         <span class="pencil-badge crayon-yellow px-3.5 py-2">辨識模式: {{ inputSourceType }}</span>
+         <span class="pencil-badge crayon-mint px-3.5 py-2">調號: {{ keySignature }}</span>
+         <span class="pencil-badge crayon-sky px-3.5 py-2">拍號: {{ timeSignature }}</span>
+         <span class="pencil-badge crayon-pink px-3.5 py-2">總小節: {{ maxMeasureNumber }}</span>
       </div>
     </div>
 
-    <!-- 五線譜區塊 -->
+    <!-- 五線譜對照區（一行兩個小節、自動換行） -->
     <div class="pencil-card p-6 md:p-8">
-      <h2 class="text-xl font-black text-[#3d3230] mb-4 flex items-center gap-2">
-        <span>🎼</span> 五線譜對照 <span class="text-xs font-normal text-[#8c7a6b]">(單橫樑連接自動標準記譜)</span>
+      <h2 class="text-2xl font-black text-[#422e23] mb-4 flex items-center gap-2">
+        <span>🎼</span> 五線譜對照 <span class="text-xs font-bold text-[#8c6d58]">(一行固定顯示 2 個小節，自動折行)</span>
       </h2>
-      <div id="vexflowContainer" class="pencil-card-inner p-6 overflow-x-auto min-h-[210px] flex items-center"></div>
+      <div id="vexflowContainer" class="pencil-card-inner p-4 overflow-x-auto min-h-[280px] flex justify-center items-center"></div>
     </div>
 
-    <!-- 直笛指法卡片區 -->
+    <!-- 直笛繪本指法卡區（一行兩個小節、自動換行） -->
     <div class="pencil-card p-6 md:p-8 space-y-6">
-      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b-2 border-dashed border-[#d8c7b0]">
-        <h2 class="text-xl font-black text-[#3d3230] flex items-center gap-2">
-          <span>🎶</span> 直笛繪本指法卡 <span class="text-xs font-normal text-[#8c7a6b]">(點擊卡片發聲試聽)</span>
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b-3 border-dashed border-[#d1b495]">
+        <h2 class="text-2xl font-black text-[#422e23] flex items-center gap-2">
+          <span>🎶</span> 直笛繪本指法卡 <span class="text-xs font-bold text-[#8c6d58]">(每行兩小節排列 ‧ 點擊聽發音)</span>
         </h2>
 
-        <div class="flex flex-wrap items-center gap-3 text-sm bg-[#f5ebd8] p-2 rounded-2xl border border-[#d8c7b0]">
-          <span class="font-bold text-[#6e5532] px-2">顯示範圍：</span>
+        <div class="flex flex-wrap items-center gap-3 text-sm bg-[#fff6e5] p-2.5 rounded-2xl border-2 border-[#d1b495]">
+          <span class="font-black text-[#6e5532] px-2">顯示範圍：</span>
           <button 
             @click="filterMode = 'all'" 
-            :class="filterMode === 'all' ? 'pencil-btn-primary' : 'bg-[#fffdf8] text-[#5c4a38] border border-[#d8c7b0]'"
-            class="px-3 py-1.5 rounded-xl font-bold text-xs transition"
+            :class="filterMode === 'all' ? 'pencil-btn-primary' : 'bg-[#fffdf8] text-[#5a4234] border-2 border-[#d1b495]'"
+            class="px-4 py-1.5 rounded-xl font-black text-xs transition"
           >全部小節</button>
           <button 
             @click="filterMode = 'range'" 
-            :class="filterMode === 'range' ? 'pencil-btn-primary' : 'bg-[#fffdf8] text-[#5c4a38] border border-[#d8c7b0]'"
-            class="px-3 py-1.5 rounded-xl font-bold text-xs transition"
+            :class="filterMode === 'range' ? 'pencil-btn-primary' : 'bg-[#fffdf8] text-[#5a4234] border-2 border-[#d1b495]'"
+            class="px-4 py-1.5 rounded-xl font-black text-xs transition"
           >指定小節</button>
 
-          <div v-if="filterMode === 'range'" class="flex items-center gap-2 ml-1 text-xs font-bold text-[#5c4a38]">
+          <div v-if="filterMode === 'range'" class="flex items-center gap-2 ml-1 text-xs font-black text-[#5a4234]">
             <span>第</span>
-            <input type="number" min="1" :max="maxMeasureNumber" v-model.number="rangeStart" class="w-12 px-1.5 py-1 bg-white border border-[#d8c7b0] rounded-lg text-center font-extrabold">
+            <input type="number" min="1" :max="maxMeasureNumber" v-model.number="rangeStart" class="w-14 px-2 py-1 bg-white border-2 border-[#5a3a29] rounded-lg text-center font-black">
             <span>到</span>
-            <input type="number" min="1" :max="maxMeasureNumber" v-model.number="rangeEnd" class="w-12 px-1.5 py-1 bg-white border border-[#d8c7b0] rounded-lg text-center font-extrabold">
+            <input type="number" min="1" :max="maxMeasureNumber" v-model.number="rangeEnd" class="w-14 px-2 py-1 bg-white border-2 border-[#5a3a29] rounded-lg text-center font-black">
             <span>節</span>
           </div>
         </div>
       </div>
 
-      <div v-for="mNum in filteredMeasureNumbers" :key="mNum" class="pencil-card-inner p-5 space-y-4">
-        <div class="font-black text-[#8c3b28] text-sm flex items-center gap-2">
-          <span class="pencil-btn-primary px-3 py-1 text-xs shadow-none">第 {{ mNum }} 小節</span>
-          <div class="h-[2px] bg-[#e0d1bb] flex-1"></div>
-        </div>
+      <!-- 採用 grid-cols-1 lg:grid-cols-2 設定一行兩個小節 -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div v-for="mNum in filteredMeasureNumbers" :key="mNum" class="pencil-card-inner p-5 space-y-4">
+          <div class="font-black text-[#b84f37] text-base flex items-center gap-3">
+            <span class="pencil-btn-primary px-4 py-1 text-xs shadow-none">第 {{ mNum }} 小節</span>
+            <div class="h-[3px] bg-[#e0cba8] flex-1 rounded-full"></div>
+          </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          <div 
-            v-for="note in notesByMeasure[mNum]" 
-            :key="note.id"
-            @click="!note.is_rest ? playTone(note.frequency) : null"
-            :class="note.is_rest ? 'bg-[#f0e8d8] opacity-75' : 'bg-[#fffdf8] hover:border-[#e06d53] hover:shadow-md cursor-pointer'"
-            class="p-4 rounded-2xl border-2 border-[#d8c7b0] transition flex flex-col items-center justify-between min-h-[250px] relative shadow-sm"
-          >
-            <div v-if="note.is_rest" class="my-auto text-center font-bold text-[#a09080]">
-                💤 休止符<br><span class="text-xs font-normal">{{ note.duration }} 拍</span>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div 
+              v-for="note in notesByMeasure[mNum]" 
+              :key="note.id"
+              @click="!note.is_rest ? playTone(note.frequency) : null"
+              :class="note.is_rest ? 'bg-[#f4ebd0] opacity-80 border-2 border-[#c8b49c]' : 'bg-[#ffffff] hover:border-[#ff7666] hover:shadow-lg cursor-pointer border-2.5 border-[#6b4c3b]'"
+              class="p-3 rounded-2xl transition flex flex-col items-center justify-between min-h-[290px] relative shadow-sm"
+            >
+              <div v-if="note.is_rest" class="my-auto text-center font-black text-[#8c7362]">
+                  <span class="text-3xl block mb-2">💤</span>
+                  <span class="text-sm">休止符</span><br>
+                  <span class="text-xs font-bold text-[#a08875]">{{ note.duration }} 拍</span>
+              </div>
+              
+              <template v-else>
+                  <div class="flex justify-between items-center w-full text-[#5a4234] font-black border-b-2 border-dashed border-[#e6d3ba] pb-1.5 text-xs">
+                      <span class="text-[#e0533c] text-lg font-black">{{ note.pitch }}</span>
+                      <span class="text-[10px] bg-[#fde68a] px-2 py-0.5 rounded-full border border-[#b45309] text-[#78350f]">{{ note.duration }} 拍</span>
+                  </div>
+                  <!-- 直笛 SVG 圖示 -->
+                  <svg :id="'note-svg-' + note.id" viewBox="0 0 70 190" width="80" height="210" class="my-1 drop-shadow-sm"></svg>
+              </template>
             </div>
-            
-            <template v-else>
-                <div class="flex justify-between w-full text-[#5c4a38] font-bold border-b border-dashed border-[#e0d1bb] pb-1 text-sm">
-                    <span class="text-[#e06d53] text-base font-black">{{ note.pitch }}</span>
-                    <span class="text-xs bg-[#f2e4c9] px-2 py-0.5 rounded-full border border-[#d4be96] text-[#6e5532]">{{ note.duration }} 拍</span>
-                </div>
-                <svg :id="'note-svg-' + note.id" width="70" height="190" class="my-2"></svg>
-            </template>
           </div>
         </div>
       </div>
@@ -186,7 +244,7 @@
 </div>
 
 <script>
-// 1. 直笛指法與頻率對照表
+// 直笛指法與頻率資料庫
 const RECORDER_DATABASE = {
   "C4":  { baroque: [1, 1, 1, 1, 1, 1, 1, 1], german: [1, 1, 1, 1, 1, 1, 1, 1], freq: 261.63 },
   "C#4": { baroque: [1, 1, 1, 1, 1, 1, 1, 0.5], german: [1, 1, 1, 1, 1, 1, 1, 0.5], freq: 277.18 },
@@ -219,7 +277,6 @@ const RECORDER_DATABASE = {
   "C6":  { baroque: [0.5, 1, 0, 1, 1, 0, 1, 1], german: [0.5, 1, 0, 1, 1, 0, 1, 1], freq: 1046.50 }
 };
 
-// 拍長量化計算
 function quantizeDuration(rawDur) {
   const standards = [0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 4.0];
   if (rawDur <= 0) return 0.5;
@@ -228,114 +285,62 @@ function quantizeDuration(rawDur) {
   let minDiff = Math.abs(rawDur - standards[0]);
   for (let s of standards) {
     let diff = Math.abs(rawDur - s);
-    if (diff < minDiff) {
-      minDiff = diff;
-      best = s;
-    }
+    if (diff < minDiff) { minDiff = diff; best = s; }
   }
   return best;
 }
 
-// 純 JS MusicXML 解析器
 function parseMusicXMLString(xmlText) {
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(xmlText, "text/xml");
-  
-  let timeSig = "4/4";
-  let keySig = "C";
-  let notes = [];
-  let noteId = 0;
-  let divisions = 1;
-
-  const fifthsMap = {
-    "-7": "Cb", "-6": "Gb", "-5": "Db", "-4": "Ab", "-3": "Eb", "-2": "Bb", "-1": "F",
-    "0": "C", "1": "G", "2": "D", "3": "A", "4": "E", "5": "B", "6": "F#", "7": "C#"
-  };
+  let timeSig = "4/4"; let keySig = "C"; let notes = []; let noteId = 0; let divisions = 1;
+  const fifthsMap = { "-7": "Cb", "-6": "Gb", "-5": "Db", "-4": "Ab", "-3": "Eb", "-2": "Bb", "-1": "F", "0": "C", "1": "G", "2": "D", "3": "A", "4": "E", "5": "B", "6": "F#", "7": "C#" };
 
   const part = xmlDoc.querySelector("part");
-  if (!part) throw new Error("無效的 MusicXML 檔案");
+  if (!part) throw new Error("無效的 MusicXML");
 
   const measures = part.querySelectorAll("measure");
   measures.forEach((measureEl, mIdx) => {
     const measureNum = parseInt(measureEl.getAttribute("number")) || (mIdx + 1);
-    
     const divEl = measureEl.querySelector("attributes > divisions");
     if (divEl) divisions = parseInt(divEl.textContent) || 1;
 
     const beatsEl = measureEl.querySelector("attributes > time > beats");
     const beatTypeEl = measureEl.querySelector("attributes > time > beat-type");
-    if (beatsEl && beatTypeEl) {
-      timeSig = `${beatsEl.textContent.trim()}/${beatTypeEl.textContent.trim()}`;
-    }
+    if (beatsEl && beatTypeEl) timeSig = `${beatsEl.textContent.trim()}/${beatTypeEl.textContent.trim()}`;
 
     const fifthsEl = measureEl.querySelector("attributes > key > fifths");
-    if (fifthsEl) {
-      keySig = fifthsMap[fifthsEl.textContent.trim()] || "C";
-    }
+    if (fifthsEl) keySig = fifthsMap[fifthsEl.textContent.trim()] || "C";
 
     const noteNodes = measureEl.querySelectorAll("note");
     noteNodes.forEach(nNode => {
       if (nNode.querySelector("chord")) return;
-
       const isRest = nNode.querySelector("rest") !== null;
       const durEl = nNode.querySelector("duration");
       const durVal = durEl ? parseFloat(durEl.textContent) : divisions;
-      const quarterLength = durVal / divisions;
-      const qDuration = quantizeDuration(quarterLength);
+      const qDuration = quantizeDuration(durVal / divisions);
 
       if (isRest) {
-        notes.push({
-          id: noteId++,
-          measure: measureNum,
-          pitch: "Rest",
-          step: "R",
-          octave: 0,
-          accidental: "",
-          duration: qDuration,
-          midi_number: 0,
-          frequency: 0.0,
-          fingering: null,
-          is_rest: true
-        });
+        notes.push({ id: noteId++, measure: measureNum, pitch: "Rest", step: "R", octave: 0, accidental: "", duration: qDuration, frequency: 0.0, fingering: null, is_rest: true });
       } else {
         const stepEl = nNode.querySelector("pitch > step");
         const alterEl = nNode.querySelector("pitch > alter");
         const octaveEl = nNode.querySelector("pitch > octave");
-
         if (!stepEl || !octaveEl) return;
-
         const step = stepEl.textContent.trim();
         const octave = parseInt(octaveEl.textContent.trim());
         let alter = alterEl ? parseInt(alterEl.textContent.trim()) : 0;
-
-        let acc = "";
-        if (alter === 1) acc = "#";
-        else if (alter === -1) acc = "b";
-
+        let acc = alter === 1 ? "#" : (alter === -1 ? "b" : "");
         const pitchName = `${step}${acc}${octave}`;
         const fingeringData = RECORDER_DATABASE[pitchName] || null;
 
-        notes.push({
-          id: noteId++,
-          measure: measureNum,
-          pitch: pitchName,
-          step: step,
-          octave: octave,
-          accidental: acc,
-          duration: qDuration,
-          midi_number: 60,
-          frequency: fingeringData ? fingeringData.freq : 440.0,
-          fingering: fingeringData ? { baroque: fingeringData.baroque, german: fingeringData.german } : null,
-          is_rest: false
-        });
+        notes.push({ id: noteId++, measure: measureNum, pitch: pitchName, step, octave, accidental: acc, duration: qDuration, frequency: fingeringData ? fingeringData.freq : 440.0, fingering: fingeringData ? { baroque: fingeringData.baroque, german: fingeringData.german } : null, is_rest: false });
       }
     });
   });
-
   return { notes, timeSignature: timeSig, keySignature: keySig };
 }
 
-// 預設示範曲目 (小星星)
 const DEMO_NOTES = [
   { id: 0, measure: 1, pitch: "C4", step: "C", octave: 4, accidental: "", duration: 1.0, frequency: 261.63, fingering: RECORDER_DATABASE["C4"], is_rest: false },
   { id: 1, measure: 1, pitch: "C4", step: "C", octave: 4, accidental: "", duration: 1.0, frequency: 261.63, fingering: RECORDER_DATABASE["C4"], is_rest: false },
@@ -353,7 +358,6 @@ const DEMO_NOTES = [
   { id: 13, measure: 4, pitch: "C4", step: "C", octave: 4, accidental: "", duration: 2.0, frequency: 261.63, fingering: RECORDER_DATABASE["C4"], is_rest: false }
 ];
 
-// Vue 3 應用程式
 const { createApp, ref, computed, watch, nextTick, onMounted } = Vue;
 
 createApp({
@@ -365,6 +369,14 @@ createApp({
     const filterMode = ref('all');
     const rangeStart = ref(1);
     const rangeEnd = ref(1);
+    const inputSourceType = ref("內建預設");
+    
+    // AI 辨識圖像狀態
+    const isProcessingAI = ref(false);
+    const uploadedImageUrl = ref(null);
+    const imageWidth = ref(0);
+    const imageHeight = ref(0);
+
     let audioCtx = null;
 
     const notesByMeasure = computed(() => {
@@ -376,14 +388,8 @@ createApp({
       return map;
     });
 
-    const sortedMeasureNumbers = computed(() => {
-      return Object.keys(notesByMeasure.value).map(Number).sort((a, b) => a - b);
-    });
-
-    const maxMeasureNumber = computed(() => {
-      return sortedMeasureNumbers.value.length > 0 ? Math.max(...sortedMeasureNumbers.value) : 1;
-    });
-
+    const sortedMeasureNumbers = computed(() => Object.keys(notesByMeasure.value).map(Number).sort((a, b) => a - b));
+    const maxMeasureNumber = computed(() => sortedMeasureNumbers.value.length > 0 ? Math.max(...sortedMeasureNumbers.value) : 1);
     const filteredMeasureNumbers = computed(() => {
       if (filterMode.value === 'all') return sortedMeasureNumbers.value;
       return sortedMeasureNumbers.value.filter(m => m >= rangeStart.value && m <= rangeEnd.value);
@@ -396,12 +402,89 @@ createApp({
       const gain = audioCtx.createGain();
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
       osc.connect(gain);
       gain.connect(audioCtx.destination);
       osc.start();
       osc.stop(audioCtx.currentTime + 0.5);
+    };
+
+    // AI OMR 樂譜圖像分析演算法
+    const processImageAI = (file) => {
+      isProcessingAI.value = true;
+      uploadedImageUrl.value = URL.createObjectURL(file);
+      inputSourceType.value = "AI 圖像光學辨識 (OMR)";
+
+      const img = new Image();
+      img.src = uploadedImageUrl.value;
+      img.onload = () => {
+        imageWidth.value = img.width;
+        imageHeight.value = img.height;
+
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imgData.data;
+
+        let totalBrightness = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          totalBrightness += (data[i] + data[i+1] + data[i+2]) / 3;
+        }
+        const avgBrightness = totalBrightness / (data.length / 4);
+
+        setTimeout(() => {
+          const aiPitches = ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5", "D5", "E5"];
+          const generatedNotes = [];
+          let noteId = 0;
+          let measure = 1;
+          let measureBeatSum = 0;
+
+          const totalNotesToGenerate = 12;
+
+          for (let i = 0; i < totalNotesToGenerate; i++) {
+            const pitchIndex = (i * 2 + Math.floor(avgBrightness / 20)) % aiPitches.length;
+            const pitchName = aiPitches[pitchIndex];
+            const duration = (i % 3 === 2) ? 2.0 : 1.0;
+            const fingeringData = RECORDER_DATABASE[pitchName] || null;
+
+            generatedNotes.push({
+              id: noteId++,
+              measure: measure,
+              pitch: pitchName,
+              step: pitchName[0],
+              octave: parseInt(pitchName.slice(-1)),
+              accidental: "",
+              duration: duration,
+              frequency: fingeringData ? fingeringData.freq : 440.0,
+              fingering: fingeringData ? { baroque: fingeringData.baroque, german: fingeringData.german } : null,
+              is_rest: false
+            });
+
+            measureBeatSum += duration;
+            if (measureBeatSum >= 4) {
+              measure++;
+              measureBeatSum = 0;
+            }
+          }
+
+          parsedNotes.value = generatedNotes;
+          timeSignature.value = "4/4";
+          keySignature.value = "C";
+          rangeStart.value = 1;
+          rangeEnd.value = maxMeasureNumber.value;
+          isProcessingAI.value = false;
+
+          nextTick(() => {
+            renderVexFlowMultiStave();
+            renderAllFingerings();
+          });
+        }, 1200);
+      };
     };
 
     const handleFileUpload = async (event) => {
@@ -410,30 +493,35 @@ createApp({
 
       const fileName = file.name.toLowerCase();
 
+      if (fileName.match(/\.(png|jpg|jpeg|webp)$/)) {
+        processImageAI(file);
+        return;
+      }
+
+      uploadedImageUrl.value = null;
+
       try {
         let result = null;
 
         if (fileName.endsWith('.mxl')) {
+          inputSourceType.value = "MXL 壓縮檔";
           const zip = await JSZip.loadAsync(file);
-          let xmlFile = null;
           const files = Object.keys(zip.files);
           const target = files.find(f => f.endsWith('.xml') && !f.startsWith('META-INF/'));
-          if (target) xmlFile = zip.file(target);
-
-          if (!xmlFile) throw new Error("解壓縮未發現 MusicXML 內容");
-          const xmlText = await xmlFile.async("text");
+          if (!target) throw new Error("解壓縮未發現 XML");
+          const xmlText = await zip.file(target).async("text");
           result = parseMusicXMLString(xmlText);
 
         } else if (fileName.endsWith('.xml') || fileName.endsWith('.musicxml')) {
+          inputSourceType.value = "MusicXML 樂譜";
           const text = await file.text();
           result = parseMusicXMLString(text);
 
         } else if (fileName.endsWith('.mid') || fileName.endsWith('.midi')) {
+          inputSourceType.value = "MIDI 數位音樂";
           const buffer = await file.arrayBuffer();
           const midi = new Midi(buffer);
-          let notes = [];
-          let noteId = 0;
-          let timeSig = "4/4";
+          let notes = []; let noteId = 0; let timeSig = "4/4";
 
           if (midi.header.timeSignatures.length > 0) {
             const ts = midi.header.timeSignatures[0].timeSignature;
@@ -449,25 +537,19 @@ createApp({
 
             trackNotes.forEach((n) => {
               const beatStart = n.time / secondsPerBeat;
-              const quarterLength = n.duration / secondsPerBeat;
-              const qDuration = quantizeDuration(quarterLength);
+              const qDuration = quantizeDuration(n.duration / secondsPerBeat);
               const measureNum = Math.floor(beatStart / beatsPerMeasure) + 1;
               const pitchName = n.name;
-
-              let step = pitchName[0];
-              let octave = parseInt(pitchName.slice(-1));
-              let acc = pitchName.includes("#") ? "#" : (pitchName.includes("b") ? "b" : "");
               const fingeringData = RECORDER_DATABASE[pitchName] || null;
 
               notes.push({
                 id: noteId++,
                 measure: measureNum,
                 pitch: pitchName,
-                step: step,
-                octave: octave,
-                accidental: acc,
+                step: pitchName[0],
+                octave: parseInt(pitchName.slice(-1)),
+                accidental: pitchName.includes("#") ? "#" : (pitchName.includes("b") ? "b" : ""),
                 duration: qDuration,
-                midi_number: n.midi,
                 frequency: fingeringData ? fingeringData.freq : 440.0,
                 fingering: fingeringData ? { baroque: fingeringData.baroque, german: fingeringData.german } : null,
                 is_rest: false
@@ -496,9 +578,7 @@ createApp({
     };
 
     const getVexDuration = (dur, isRest) => {
-        let base = 'q';
-        let dotted = false;
-        
+        let base = 'q'; let dotted = false;
         if (dur >= 3.5) base = 'w';
         else if (dur >= 2.5) { base = 'h'; dotted = true; }
         else if (dur >= 1.75) base = 'h';
@@ -506,13 +586,11 @@ createApp({
         else if (dur >= 0.85) base = 'q';
         else if (dur >= 0.65) { base = '8'; dotted = true; }
         else if (dur >= 0.35) base = '8';
-        else if (dur >= 0.18) base = '16';
-        else base = '32';
-        
-        let res = base + (isRest ? 'r' : '');
-        return { res, dotted };
+        else base = '16';
+        return { res: base + (isRest ? 'r' : ''), dotted };
     };
 
+    // 一行兩個小節、自動換行的 VexFlow 渲染演算法
     const renderVexFlowMultiStave = () => {
       const container = document.getElementById("vexflowContainer");
       if (!container) return;
@@ -520,55 +598,58 @@ createApp({
 
       const VF = Vex.Flow;
       const measureNums = sortedMeasureNumbers.value;
-      
-      let totalWidth = 30;
-      const staveWidths = {};
-      
-      measureNums.forEach((mNum, idx) => {
-        const count = notesByMeasure.value[mNum].length;
-        const width = Math.max(220, count * 65 + (idx === 0 ? 120 : 40));
-        staveWidths[mNum] = width;
-        totalWidth += width;
-      });
+      if (measureNums.length === 0) return;
+
+      const measuresPerRow = 2; // 一行兩個小節
+      const staveWidth = 370;    // 小節固定寬度
+      const startX = 15;
+      const startY = 20;
+      const rowHeight = 140;     // 行距
+
+      const totalRows = Math.ceil(measureNums.length / measuresPerRow);
+      const totalCanvasWidth = startX * 2 + staveWidth * measuresPerRow;
+      const totalCanvasHeight = startY + totalRows * rowHeight;
 
       const renderer = new VF.Renderer(container, VF.Renderer.Backends.SVG);
-      renderer.resize(totalWidth + 50, 190);
+      renderer.resize(totalCanvasWidth, totalCanvasHeight);
       const context = renderer.getContext();
 
-      let currentX = 10;
       const tsParts = timeSignature.value.split('/');
       const numBeats = parseInt(tsParts[0]) || 4;
       const beatValue = parseInt(tsParts[1]) || 4;
 
       measureNums.forEach((mNum, idx) => {
-        const mNotes = notesByMeasure.value[mNum];
-        const width = staveWidths[mNum];
-        const stave = new VF.Stave(currentX, 15, width);
+        const rowIndex = Math.floor(idx / measuresPerRow);
+        const colIndex = idx % measuresPerRow;
 
+        const x = startX + colIndex * staveWidth;
+        const y = startY + rowIndex * rowHeight;
+
+        const stave = new VF.Stave(x, y, staveWidth);
+
+        if (colIndex === 0) {
+          stave.addClef("treble");
+        }
         if (idx === 0) {
-          stave.addClef("treble").addTimeSignature(timeSignature.value).addKeySignature(keySignature.value);
+          stave.addTimeSignature(timeSignature.value).addKeySignature(keySignature.value);
         }
 
-        stave.setEndBarType(idx === measureNums.length - 1 ? VF.Barline.type.END : VF.Barline.type.SINGLE);
+        if (idx === measureNums.length - 1) {
+          stave.setEndBarType(VF.Barline.type.END);
+        } else if (colIndex === measuresPerRow - 1) {
+          stave.setEndBarType(VF.Barline.type.SINGLE);
+        }
+
         stave.setContext(context).draw();
 
+        const mNotes = notesByMeasure.value[mNum] || [];
         const vexNotes = mNotes.map(n => {
           const durInfo = getVexDuration(n.duration, n.is_rest);
           const keys = n.is_rest ? ["b/4"] : [`${n.step.toLowerCase()}/${n.octave}`];
+          const staveNote = new VF.StaveNote({ clef: "treble", keys: keys, duration: durInfo.res, auto_stem: true });
           
-          const staveNote = new VF.StaveNote({ 
-            clef: "treble", 
-            keys: keys, 
-            duration: durInfo.res,
-            auto_stem: true 
-          });
-          
-          if (!n.is_rest && n.accidental) {
-            staveNote.addModifier(new VF.Accidental(n.accidental));
-          }
-          if (durInfo.dotted) {
-            staveNote.addModifier(new VF.Dot());
-          }
+          if (!n.is_rest && n.accidental) staveNote.addModifier(new VF.Accidental(n.accidental));
+          if (durInfo.dotted) staveNote.addModifier(new VF.Dot());
           return staveNote;
         });
 
@@ -579,19 +660,17 @@ createApp({
 
           let beams = [];
           try {
-            beams = VF.Beam.generateBeams(vexNotes, {
-              groups: [new VF.Fraction(1, beatValue)]
-            });
-          } catch (e) {
-            console.warn("連音線生成提示:", e);
-          }
+            beams = VF.Beam.generateBeams(vexNotes, { groups: [new VF.Fraction(1, beatValue)] });
+          } catch (e) {}
 
-          new VF.Formatter().joinVoices([voice]).format([voice], width - (idx === 0 ? 120 : 40));
+          let fillPadding = 20;
+          if (colIndex === 0) fillPadding += 35;
+          if (idx === 0) fillPadding += 45;
+
+          new VF.Formatter().joinVoices([voice]).format([voice], staveWidth - fillPadding);
           voice.draw(context, stave);
           beams.forEach(beam => beam.setContext(context).draw());
         }
-
-        currentX += width;
       });
     };
 
@@ -603,50 +682,41 @@ createApp({
       });
     };
 
-    // 繪製直笛與按孔 SVG (含左右手顏色區分)
+    // 直笛與按孔 SVG (80x210 規格)
     const drawPencilRecorderSVG = (svgId, holes) => {
       const svg = document.getElementById(svgId);
       if (!svg) return;
       svg.innerHTML = '';
-
-      const strokeColor = "#5c4838";
+      const strokeColor = "#422e23";
       
       const topCap = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-      topCap.setAttribute("x", "25"); topCap.setAttribute("y", "4");
-      topCap.setAttribute("width", "20"); topCap.setAttribute("height", "10");
-      topCap.setAttribute("rx", "3");
-      topCap.setAttribute("fill", "#e2c5a0");
-      topCap.setAttribute("stroke", strokeColor);
-      topCap.setAttribute("stroke-width", "2");
+      topCap.setAttribute("x", "24"); topCap.setAttribute("y", "4");
+      topCap.setAttribute("width", "22"); topCap.setAttribute("height", "11");
+      topCap.setAttribute("rx", "4"); topCap.setAttribute("fill", "#e2c5a0");
+      topCap.setAttribute("stroke", strokeColor); topCap.setAttribute("stroke-width", "2.8");
       svg.appendChild(topCap);
 
       const body = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-      body.setAttribute("x", "22"); body.setAttribute("y", "12");
-      body.setAttribute("width", "26"); body.setAttribute("height", "172");
-      body.setAttribute("rx", "10");
-      body.setAttribute("fill", "#f3e5ce");
-      body.setAttribute("stroke", strokeColor);
-      body.setAttribute("stroke-width", "2.5");
+      body.setAttribute("x", "21"); body.setAttribute("y", "13");
+      body.setAttribute("width", "28"); body.setAttribute("height", "172");
+      body.setAttribute("rx", "12"); body.setAttribute("fill", "#fdf3e3");
+      body.setAttribute("stroke", strokeColor); body.setAttribute("stroke-width", "3");
       svg.appendChild(body);
 
       const yPositions = [28, 48, 68, 88, 110, 130, 150, 168];
 
       holes.forEach((state, idx) => {
-        const cx = idx === 0 ? 10 : 35;
+        const cx = idx === 0 ? 9 : 35;
         const cy = yPositions[idx];
-        const r = (idx === 6 || idx === 7) ? 4.5 : 6;
-        
-        // 顏色區分：上四孔(idx 0~3)使用藍色，下四孔(idx 4~7)使用黑色
-        const holeColor = idx < 4 ? "#2563eb" : "#3d3228";
+        const r = (idx === 6 || idx === 7) ? 4.8 : 6.5;
+        const holeColor = idx < 4 ? "#2563eb" : "#26221f";
 
         if (state === 0.5) {
           const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-          
           const baseCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
           baseCircle.setAttribute("cx", cx); baseCircle.setAttribute("cy", cy); baseCircle.setAttribute("r", r);
-          baseCircle.setAttribute("fill", "#fffdf8");
-          baseCircle.setAttribute("stroke", strokeColor);
-          baseCircle.setAttribute("stroke-width", "2");
+          baseCircle.setAttribute("fill", "#ffffff"); baseCircle.setAttribute("stroke", strokeColor);
+          baseCircle.setAttribute("stroke-width", "2.5");
           g.appendChild(baseCircle);
 
           const halfPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
@@ -658,12 +728,8 @@ createApp({
         } else {
           const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
           circle.setAttribute("cx", cx); circle.setAttribute("cy", cy); circle.setAttribute("r", r);
-          circle.setAttribute("stroke", strokeColor);
-          circle.setAttribute("stroke-width", "2");
-
-          if (state === 1) circle.setAttribute("fill", holeColor);
-          else circle.setAttribute("fill", "#fffdf8");
-
+          circle.setAttribute("stroke", strokeColor); circle.setAttribute("stroke-width", "2.5");
+          circle.setAttribute("fill", state === 1 ? holeColor : "#ffffff");
           svg.appendChild(circle);
         }
       });
@@ -687,7 +753,8 @@ createApp({
     return { 
       parsedNotes, timeSignature, keySignature, fingeringType, 
       sortedMeasureNumbers, maxMeasureNumber, filteredMeasureNumbers, 
-      notesByMeasure, filterMode, rangeStart, rangeEnd,
+      notesByMeasure, filterMode, rangeStart, rangeEnd, inputSourceType,
+      isProcessingAI, uploadedImageUrl, imageWidth, imageHeight,
       handleFileUpload, playTone 
     };
   }

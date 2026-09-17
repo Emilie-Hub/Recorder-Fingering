@@ -3,42 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>直笛樂譜對照吹奏系統 - 可愛直笛版</title>
+  <title>國小高音直笛樂譜與指法對照教學系統</title>
 
-  <!-- CDN 套件載入 -->
+  <!-- 外部函式庫 -->
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tonejs/midi@2.0.28/build/Midi.js"></script>
 
-  <!-- 字型：手繪童趣風格 -->
+  <!-- Google 繪本童趣與音樂專數字型 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Comic+Neue:wght@700&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
 
   <style>
     body {
-      font-family: 'Zen Maru Gothic', 'Comic Neue', cursive, sans-serif;
-      background-color: #fffdf7;
+      font-family: 'Zen Maru Gothic', 'Comic Neue', sans-serif;
+      background-color: #fffdf8;
       background-image: 
         radial-gradient(#ebd9c0 1.2px, transparent 1.2px),
-        linear-gradient(to right, rgba(235, 210, 180, 0.12) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(235, 210, 180, 0.12) 1px, transparent 1px);
+        linear-gradient(to right, rgba(235, 210, 180, 0.14) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(235, 210, 180, 0.14) 1px, transparent 1px);
       background-size: 24px 24px, 24px 24px, 24px 24px;
     }
 
     .pencil-card {
       background-color: #ffffff;
       border: 3px solid #6b4c3b;
-      box-shadow: 5px 6px 0px #e6c8a0, 8px 9px 0px rgba(107, 76, 59, 0.15);
+      box-shadow: 4px 6px 0px #e6c8a0, 7px 9px 0px rgba(107, 76, 59, 0.12);
       border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
     }
 
     .pencil-card-inner {
       background-color: #fffcf5;
-      border: 2.5px dashed #d1b495;
-      border-radius: 20px 24px 18px 22px;
+      border: 2px dashed #d1b495;
+      border-radius: 18px;
     }
 
     .pencil-btn-primary {
@@ -59,192 +59,410 @@
       background-color: #fff3c4;
       color: #5c4233;
       border: 2px solid #5c4233;
-      box-shadow: 2px 3px 0px #d9be8b;
+      box-shadow: 2px 2.5px 0px #d9be8b;
       border-radius: 12px;
     }
 
-    .crayon-mint { background-color: #c7f2e3; border-color: #3b6e5e; }
-    .crayon-sky { background-color: #bae6fd; border-color: #2b5070; }
-    .crayon-pink { background-color: #fbcfe8; border-color: #702b4d; }
-    .crayon-yellow { background-color: #fef08a; border-color: #854d0e; }
+    .measure-box {
+      border: 2.5px solid #6b4c3b;
+      border-radius: 20px;
+      background: #ffffff;
+      box-shadow: 4px 5px 0px #eed9c0;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    .measure-box:hover {
+      border-color: #e0634c;
+    }
+
+    .active-note-card {
+      border-color: #ff6854 !important;
+      background-color: #fff1ee !important;
+      transform: translateY(-4px);
+      box-shadow: 0 8px 16px rgba(255, 104, 84, 0.25) !important;
+    }
+
+    /* 隱藏滾動條但保留功能 */
+    .no-scrollbar::-webkit-scrollbar {
+      height: 6px;
+    }
+    .no-scrollbar::-webkit-scrollbar-thumb {
+      background-color: #d1b495;
+      border-radius: 10px;
+    }
   </style>
 </head>
-<body class="text-[#5a4234] min-h-screen pb-16">
+<body class="text-[#5a4234] min-h-screen pb-20">
 
 <div id="app" class="max-w-7xl mx-auto p-4 md:p-8">
   
-  <!-- 頁首標題區 (圖示已換成可愛直笛角色) -->
+  <!-- 頁首標題與操作區 -->
   <header class="pencil-card p-6 md:p-8 mb-8 flex flex-col md:flex-row justify-between items-center gap-6">
     <div class="flex items-center gap-5">
-      <!-- 可愛手繪直笛圖示 -->
-      <div class="w-16 h-16 bg-[#ffe8d6] border-3 border-[#6b4c3b] rounded-3xl flex items-center justify-center shadow-sm rotate-[-3deg]">
-        <svg class="w-11 h-11" viewBox="0 0 64 64" fill="none">
+      <!-- 手繪直笛吉祥物 -->
+      <div class="w-16 h-16 bg-[#ffe8d6] border-3 border-[#6b4c3b] rounded-3xl flex items-center justify-center shadow-sm rotate-[-3deg] flex-shrink-0">
+        <svg class="w-12 h-12" viewBox="0 0 64 64" fill="none">
           <path d="M24 8 C24 5.8 25.8 4 28 4 L36 4 C38.2 4 40 5.8 40 8 L38 56 C38 58.2 36.2 60 34 60 L30 60 C27.8 60 26 58.2 26 56 Z" fill="#FFE3A8" stroke="#6B4C3B" stroke-width="3"/>
-          <path d="M25 10 L39 10" stroke="#6B4C3B" stroke-width="3"/>
+          <path d="M25 10 L39 10" stroke="#6B4C3B" stroke-width="2.5"/>
           <rect x="29" y="13" width="6" height="3" fill="#6B4C3B" rx="1"/>
-          <!-- 可愛笑臉與腮紅 -->
+          <!-- 眨眼表情 -->
           <circle cx="28" cy="22" r="1.8" fill="#422E23"/>
           <circle cx="36" cy="22" r="1.8" fill="#422E23"/>
           <ellipse cx="26.5" cy="24" rx="1.5" ry="1" fill="#FF7666"/>
           <ellipse cx="37.5" cy="24" rx="1.5" ry="1" fill="#FF7666"/>
           <path d="M30 25 Q32 27 34 25" stroke="#422E23" stroke-width="2" stroke-linecap="round" fill="none"/>
-          <!-- 笛孔 -->
-          <circle cx="32" cy="32" r="2.3" fill="#2563EB"/>
-          <circle cx="32" cy="39" r="2.3" fill="#2563EB"/>
-          <circle cx="32" cy="46" r="2.3" fill="#26221F"/>
+          <!-- 音孔 -->
+          <circle cx="32" cy="32" r="2.2" fill="#2563EB"/>
+          <circle cx="32" cy="39" r="2.2" fill="#2563EB"/>
+          <circle cx="32" cy="46" r="2.2" fill="#26221F"/>
           <circle cx="32" cy="52" r="2" fill="#26221F"/>
         </svg>
       </div>
 
       <div>
-        <h1 class="text-2xl md:text-3xl font-black text-[#422e23] flex items-center gap-2">
-          直笛樂譜對照系統
-          <span class="text-xs bg-[#ffb3a7] text-[#422e23] px-3 py-1 rounded-full border-2 border-[#6b4c3b] font-bold">一行兩小節版</span>
+        <h1 class="text-2xl md:text-3xl font-black text-[#422e23] flex items-center gap-2 flex-wrap">
+          國小高音直笛樂譜與指法對照系統
+          <span class="text-xs bg-[#ffb3a7] text-[#422e23] px-3 py-1 rounded-full border-2 border-[#6b4c3b] font-bold">
+            🎵 連結線 ‧ 附點音符 ‧ 符尾規範 ‧ 上下精準對照版
+          </span>
         </h1>
         <p class="text-sm font-bold text-[#8c6d58] mt-1 flex items-center gap-1">
-          <span>🎨</span> 支援圖片檔 (AI 辨識) / MusicXML / MXL / MIDI
+          <span>🎒</span> 包含三連音規範、連結線(Tie)延音、附點音符時值、符尾/符槓標準化、上下垂直對齊發聲
         </p>
       </div>
     </div>
 
-    <label class="pencil-btn-primary px-7 py-4 font-black shadow cursor-pointer text-base flex items-center gap-2 flex-shrink-0">
-      <span class="text-xl">📷</span>
-      <span>上傳樂譜 (圖片/MXL/XML/MIDI)</span>
-      <input type="file" class="hidden" @change="handleFileUpload" accept=".png, .jpg, .jpeg, .webp, .xml, .musicxml, .mxl, .mid, .midi" />
-    </label>
+    <!-- 檔案載入與樂理教學按鈕 -->
+    <div class="flex items-center gap-3 flex-wrap">
+      <button @click="showTheoryGuide = !showTheoryGuide" class="bg-[#e0f2fe] hover:bg-[#bae6fd] text-[#0369a1] border-2 border-[#0284c7] px-4 py-3 rounded-2xl font-black text-sm transition shadow-sm flex items-center gap-1.5">
+        <span>📖</span> 音樂樂理教室 (三連音/連結線/附點)
+      </button>
+      <button @click="loadSampleTripletDemo" class="bg-[#fde047] hover:bg-[#facc15] text-[#593d18] border-2 border-[#6b4c3b] px-4 py-3 rounded-2xl font-black text-sm transition shadow-sm">
+        ✨ 載入完整示範曲
+      </button>
+      <label class="pencil-btn-primary px-6 py-3.5 font-black shadow cursor-pointer text-sm md:text-base flex items-center gap-2 flex-shrink-0">
+        <span class="text-lg">📂</span>
+        <span>上傳樂譜 (MusicXML / MXL / MIDI)</span>
+        <input type="file" class="hidden" @change="handleFileUpload" accept=".xml, .musicxml, .mxl, .mid, .midi, .png, .jpg, .jpeg" />
+      </label>
+    </div>
   </header>
 
-  <!-- AI 辨識狀態提示與圖片預覽 -->
-  <div v-if="isProcessingAI" class="pencil-card p-6 mb-8 text-center bg-[#fffbeb] flex flex-col items-center justify-center gap-3">
-    <div class="animate-spin text-4xl">🔍</div>
-    <div class="text-lg font-black text-[#b45309]">AI 正在分析圖片並進行光學樂譜辨識 (OMR)...</div>
-    <div class="text-xs text-[#854d0e] font-bold">定位五線譜線條與音符頭位置中，請稍候</div>
+  <!-- 專業樂理對照提示看板 (三連音、附點音符、連結線、符尾規範) -->
+  <section v-if="showTheoryGuide" class="pencil-card p-6 mb-8 bg-[#fffcf5] border-[#d97706] transition-all">
+    <div class="flex justify-between items-center pb-3 border-b-2 border-dashed border-[#e6d3ba] mb-4">
+      <div class="flex items-center gap-2">
+        <span class="text-2xl">🎼</span>
+        <h3 class="text-lg md:text-xl font-black text-[#78350f]">
+          音樂樂理小教室：三連音、附點八分＋十六分音型、連結線（Tie）與符尾規範
+        </h3>
+      </div>
+      <button @click="showTheoryGuide = false" class="text-sm font-black text-[#92400e] bg-[#fef3c7] px-3 py-1 rounded-xl border border-[#d97706]">
+        收合指南 ✕
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <!-- 1. 三連音對比 (包含音型二：高音八分三連音 符桿朝下、符槓在下、數字3在下) -->
+      <div class="bg-white p-3.5 rounded-2xl border-2 border-[#854d0e] flex flex-col items-center text-center shadow-sm">
+        <div class="bg-[#fef3c7] text-[#92400e] px-2.5 py-1 rounded-full text-xs font-black mb-1 border border-[#d97706]">
+          三連音標準記譜（無方括號）
+        </div>
+        <svg class="w-full h-24 my-1" viewBox="0 0 160 85">
+          <!-- 五線譜背景底線 -->
+          <line x1="5" y1="28" x2="155" y2="28" stroke="#e5e7eb" stroke-width="1"/>
+          <line x1="5" y1="36" x2="155" y2="36" stroke="#e5e7eb" stroke-width="1"/>
+          <line x1="5" y1="44" x2="155" y2="44" stroke="#e5e7eb" stroke-width="1"/>
+          <line x1="5" y1="52" x2="155" y2="52" stroke="#e5e7eb" stroke-width="1"/>
+          <line x1="5" y1="60" x2="155" y2="60" stroke="#e5e7eb" stroke-width="1"/>
+
+          <!-- 左側：低音符桿朝上 -->
+          <text x="35" y="14" font-size="12" font-family="serif" font-style="italic" font-weight="bold" text-anchor="middle" fill="#1c1917">3</text>
+          <polygon points="18,19 53,15 53,20 18,24" fill="#1c1917"/>
+          <ellipse cx="18" cy="58" rx="4.5" ry="3.4" transform="rotate(-25 18 58)" fill="#1c1917"/>
+          <line x1="21.5" y1="56" x2="21.5" y2="21" stroke="#1c1917" stroke-width="1.8"/>
+          <ellipse cx="34" cy="52" rx="4.5" ry="3.4" transform="rotate(-25 34 52)" fill="#1c1917"/>
+          <line x1="37.5" y1="50" x2="37.5" y2="19" stroke="#1c1917" stroke-width="1.8"/>
+          <ellipse cx="50" cy="46" rx="4.5" ry="3.4" transform="rotate(-25 50 46)" fill="#1c1917"/>
+          <line x1="53.5" y1="44" x2="53.5" y2="16.5" stroke="#1c1917" stroke-width="1.8"/>
+
+          <!-- 分隔虛線 -->
+          <line x1="75" y1="10" x2="75" y2="76" stroke="#d1b495" stroke-dasharray="2,2" stroke-width="1.2"/>
+
+          <!-- 右側【音型二】：高音八分三連音 (符桿朝下、實心符槓在下、數字3在下方無括號) -->
+          <ellipse cx="96" cy="34" rx="4.6" ry="3.5" transform="rotate(-25 96 34)" fill="#1c1917"/>
+          <line x1="92.5" y1="35" x2="92.5" y2="68" stroke="#1c1917" stroke-width="1.8"/>
+          <ellipse cx="114" cy="42" rx="4.6" ry="3.5" transform="rotate(-25 114 42)" fill="#1c1917"/>
+          <line x1="110.5" y1="43" x2="110.5" y2="70" stroke="#1c1917" stroke-width="1.8"/>
+          <ellipse cx="132" cy="40" rx="4.6" ry="3.5" transform="rotate(-25 132 40)" fill="#1c1917"/>
+          <line x1="128.5" y1="41" x2="128.5" y2="72" stroke="#1c1917" stroke-width="1.8"/>
+          <!-- 底部主符槓 (Beam) -->
+          <polygon points="91.5,67 129.5,71 129.5,76 91.5,72" fill="#1c1917"/>
+          <!-- 符槓正下方純斜體 3 (無方括號) -->
+          <text x="110.5" y="84" font-size="13" font-family="serif" font-style="italic" font-weight="bold" text-anchor="middle" fill="#1c1917">3</text>
+        </svg>
+        <p class="text-[11px] font-bold text-[#573d2d] leading-tight text-left">
+          • <span class="text-[#dc2626] font-black">音型二規範：</span>高音八分三連音符桿朝下，符槓在下方，<span class="text-[#2563eb] font-black">數字 3 置於符槓下方</span>且不加方括號。
+        </p>
+      </div>
+
+      <!-- 2. 音型一：附點八分 ＋ 十六分音符連槓音型 -->
+      <div class="bg-white p-3.5 rounded-2xl border-2 border-[#7c3aed] flex flex-col items-center text-center shadow-sm">
+        <div class="bg-[#f3e8ff] text-[#7c3aed] px-2.5 py-1 rounded-full text-xs font-black mb-1 border border-[#a855f7]">
+          附點八分 ＋ 十六分連槓音型
+        </div>
+        <svg class="w-full h-24 my-1" viewBox="0 0 160 85">
+          <!-- 五線譜背景底線 -->
+          <line x1="10" y1="26" x2="150" y2="26" stroke="#e5e7eb" stroke-width="1"/>
+          <line x1="10" y1="34" x2="150" y2="34" stroke="#e5e7eb" stroke-width="1"/>
+          <line x1="10" y1="42" x2="150" y2="42" stroke="#e5e7eb" stroke-width="1"/>
+          <line x1="10" y1="50" x2="150" y2="50" stroke="#e5e7eb" stroke-width="1"/>
+          <line x1="10" y1="58" x2="150" y2="58" stroke="#e5e7eb" stroke-width="1"/>
+
+          <!-- 音型一：第1音 (附點八分，D5，符桿朝下) -->
+          <ellipse cx="50" cy="34" rx="5.5" ry="4" transform="rotate(-25 50 34)" fill="#1c1917"/>
+          <circle cx="60" cy="34" r="2.2" fill="#7c3aed"/>
+          <line x1="45.5" y1="36" x2="45.5" y2="68" stroke="#1c1917" stroke-width="2.2"/>
+
+          <!-- 音型一：第2音 (十六分音符，C5，符桿朝下) -->
+          <ellipse cx="106" cy="42" rx="5.5" ry="4" transform="rotate(-25 106 42)" fill="#1c1917"/>
+          <line x1="101.5" y1="44" x2="101.5" y2="70" stroke="#1c1917" stroke-width="2.2"/>
+
+          <!-- 底部連續主符槓 (Primary Beam) -->
+          <polygon points="44.5,67 102.5,69 102.5,74 44.5,72" fill="#1c1917"/>
+
+          <!-- 十六分音符內側次級符槓 (Secondary Beam Stub) -->
+          <polygon points="85,63 102.5,64.5 102.5,68 85,66.5" fill="#7c3aed"/>
+
+          <!-- 說明標籤 -->
+          <text x="50" y="81" font-size="9" font-weight="bold" fill="#6d28d9">附點八分(3/4拍)</text>
+          <text x="106" y="81" font-size="9" font-weight="bold" fill="#6d28d9">16分(1/4拍)</text>
+        </svg>
+        <p class="text-[11px] font-bold text-[#581c87] leading-tight text-left">
+          • <span class="text-[#dc2626] font-black">音型一規範：</span>同拍內連槓！主符槓貫穿兩音，十六分音符向內附帶<span class="text-[#7c3aed] font-black">次級符槓</span>。
+        </p>
+      </div>
+
+      <!-- 3. 符尾 (Flag) 與 符槓 (Beam) -->
+      <div class="bg-white p-3.5 rounded-2xl border-2 border-[#15803d] flex flex-col items-center text-center shadow-sm">
+        <div class="bg-[#dcfce7] text-[#15803d] px-2.5 py-1 rounded-full text-xs font-black mb-1 border border-[#22c55e]">
+          符尾 (Flag) 與 符槓 (Beam)
+        </div>
+        <svg class="w-full h-24 my-1" viewBox="0 0 160 85">
+          <!-- 獨立八分音符 (帶弧形符尾) -->
+          <ellipse cx="35" cy="62" rx="7" ry="5" transform="rotate(-25 35 62)" fill="#1c1917"/>
+          <line x1="41" y1="60" x2="41" y2="18" stroke="#1c1917" stroke-width="2.2"/>
+          <path d="M 41 18 Q 54 26 48 38 Q 45 32 41 28" fill="#1c1917"/>
+          <text x="42" y="77" font-size="9" font-weight="bold" text-anchor="middle" fill="#15803d">符尾 (Flag)</text>
+          <!-- 兩個八分音符連槓 -->
+          <polygon points="105,20 140,20 140,25 105,25" fill="#1c1917"/>
+          <ellipse cx="100" cy="62" rx="6" ry="4.5" transform="rotate(-25 100 62)" fill="#1c1917"/>
+          <line x1="105" y1="60" x2="105" y2="20" stroke="#1c1917" stroke-width="2"/>
+          <ellipse cx="135" cy="62" rx="6" ry="4.5" transform="rotate(-25 135 62)" fill="#1c1917"/>
+          <line x1="140" y1="60" x2="140" y2="20" stroke="#1c1917" stroke-width="2"/>
+          <text x="122" y="77" font-size="9" font-weight="bold" text-anchor="middle" fill="#15803d">符槓 (Beam)</text>
+        </svg>
+        <p class="text-[11px] font-bold text-[#14532d] leading-tight text-left">
+          • <span class="font-black">單獨短音：</span>末端呈現弧形符尾。<br>
+          • <span class="font-black">拍內成組：</span>短音符以實心粗橫槓連為一體。
+        </p>
+      </div>
+
+      <!-- 4. 連結線 (Tie) -->
+      <div class="bg-white p-3.5 rounded-2xl border-2 border-[#0284c7] flex flex-col items-center text-center shadow-sm">
+        <div class="bg-[#e0f2fe] text-[#0284c7] px-2.5 py-1 rounded-full text-xs font-black mb-1 border border-[#38bdf8]">
+          連結線 (Tie)
+        </div>
+        <svg class="w-full h-24 my-1" viewBox="0 0 160 85">
+          <!-- 兩個同音高音符以圓滑線相連 -->
+          <ellipse cx="40" cy="50" rx="7" ry="5" transform="rotate(-25 40 50)" fill="#1c1917"/>
+          <line x1="46" y1="48" x2="46" y2="18" stroke="#1c1917" stroke-width="2.2"/>
+          <ellipse cx="110" cy="50" rx="7" ry="5" transform="rotate(-25 110 50)" fill="#1c1917"/>
+          <line x1="116" y1="48" x2="116" y2="18" stroke="#1c1917" stroke-width="2.2"/>
+          <!-- 連結線下弧線 -->
+          <path d="M 43 56 Q 75 72 108 56 Q 75 67 43 56" fill="#0284c7"/>
+          <text x="76" y="79" font-size="10" font-weight="bold" text-anchor="middle" fill="#0369a1">時值相加 ‧ 不重吐氣</text>
+        </svg>
+        <p class="text-[11px] font-bold text-[#075985] leading-tight text-left">
+          • <span class="font-black">連結線定義：</span>連接相同音高，時值合併。<br>
+          • <span class="text-[#0369a1] font-black">吹奏口訣：</span>第 2 音氣息持續延展不重吐舌。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 提示訊息 Modal (取代 alert) -->
+  <div v-if="toastMessage" class="fixed bottom-6 right-6 z-50 bg-[#fff5eb] border-3 border-[#6b4c3b] p-4 rounded-2xl shadow-xl flex items-center gap-3 animate-bounce">
+    <span class="text-2xl">💡</span>
+    <span class="font-black text-[#5a4234] text-sm">{{ toastMessage }}</span>
+    <button @click="toastMessage = ''" class="ml-2 font-black text-gray-500 hover:text-black">✕</button>
   </div>
 
-  <div v-if="uploadedImageUrl" class="pencil-card p-6 mb-8">
-    <h3 class="text-lg font-black text-[#422e23] mb-3 flex items-center gap-2">
-      🖼️ 樂譜圖片 AI 分析預覽
-    </h3>
-    <div class="flex flex-col md:flex-row gap-6 items-center">
-      <img :src="uploadedImageUrl" class="max-h-48 rounded-xl border-2 border-[#6b4c3b] object-contain bg-white p-2" />
-      <div class="text-sm font-bold text-[#6e5532] space-y-2">
-        <p class="text-green-700 font-black">✅ AI 辨識完成！已自動排列為每行 2 小節。</p>
-        <p>✦ 圖像解析度：{{ imageWidth }} x {{ imageHeight }} px</p>
-        <p>✦ 自動偵測調號與拍號：{{ keySignature }} / {{ timeSignature }}</p>
+  <!-- 頂部設定工具列 -->
+  <div class="pencil-card p-5 mb-8 flex flex-wrap justify-between items-center gap-4">
+    <div class="flex flex-wrap items-center gap-4 md:gap-6 font-bold text-sm md:text-base">
+      <!-- 英式 / 德式切換 -->
+      <div class="flex items-center gap-3 bg-[#fff8eb] px-4 py-2 rounded-2xl border-2 border-[#8c6d58]">
+        <span class="text-[#5a4234] font-black">🖍️ 直笛系統：</span>
+        <label class="flex items-center gap-1.5 cursor-pointer text-[#422e23] font-black">
+          <input type="radio" value="baroque" v-model="fingeringType" class="accent-[#ff7666] w-4 h-4"> 英式 (B)
+        </label>
+        <label class="flex items-center gap-1.5 cursor-pointer text-[#422e23] font-black">
+          <input type="radio" value="german" v-model="fingeringType" class="accent-[#ff7666] w-4 h-4"> 德式 (G)
+        </label>
       </div>
+
+      <!-- 孔位圖例說明 -->
+      <div class="flex items-center gap-3 text-xs bg-[#f4ebd0] px-4 py-2 rounded-2xl border-2 border-[#a89078]">
+        <span class="font-black text-[#5a4234]">孔位說明：</span>
+        <span class="flex items-center gap-1 font-black text-[#2563eb]">🔵 左手 (背孔0/1/2/3)</span>
+        <span class="flex items-center gap-1 font-black text-[#26221f]">⬛ 右手 (4/5/6/7)</span>
+        <span class="flex items-center gap-1 font-black text-[#dc2626]">🌓 半孔 (高音半開)</span>
+      </div>
+    </div>
+
+    <!-- 樂曲資訊徽章 -->
+    <div class="text-xs md:text-sm font-black flex gap-2.5 flex-wrap">
+      <span class="pencil-badge bg-[#fef08a] px-3 py-1.5">來源: {{ inputSourceType }}</span>
+      <span class="pencil-badge bg-[#c7f2e3] px-3 py-1.5">調號: {{ keySignature }}</span>
+      <span class="pencil-badge bg-[#bae6fd] px-3 py-1.5">拍號: {{ timeSignature }}</span>
+      <span class="pencil-badge bg-[#fbcfe8] px-3 py-1.5">總小節: {{ maxMeasureNumber }}</span>
+      <span v-if="hasTripletsDetected" class="pencil-badge bg-[#fed7aa] border-[#ea580c] text-[#9a3412] px-3 py-1.5 font-black">
+        🌟 偵測到三連音
+      </span>
     </div>
   </div>
 
-  <main v-show="parsedNotes.length > 0" class="space-y-8">
-
-    <!-- 控制面板 -->
-    <div class="pencil-card p-5 flex flex-wrap justify-between items-center gap-4">
-      <div class="flex flex-wrap items-center gap-6 font-bold text-base">
-        <div class="flex items-center gap-3 bg-[#fff8eb] px-4 py-2 rounded-2xl border-2 border-[#8c6d58]">
-          <span class="text-[#5a4234]">🖍️ 指法系統：</span>
-          <label class="flex items-center gap-1.5 cursor-pointer text-[#422e23] font-black">
-            <input type="radio" value="baroque" v-model="fingeringType" class="accent-[#ff7666] w-4 h-4"> 英式 (B)
-          </label>
-          <label class="flex items-center gap-1.5 cursor-pointer text-[#422e23] font-black">
-            <input type="radio" value="german" v-model="fingeringType" class="accent-[#ff7666] w-4 h-4"> 德式 (G)
-          </label>
-        </div>
-
-        <div class="flex items-center gap-3 text-xs bg-[#f4ebd0] px-4 py-2 rounded-2xl border-2 border-[#a89078]">
-          <span class="font-black text-[#5a4234]">按孔圖例：</span>
-          <span class="flex items-center gap-1 font-black text-[#2563eb]">🔵 上四孔 (左手)</span>
-          <span class="flex items-center gap-1 font-black text-[#26221f]">⬛ 下四孔 (右手)</span>
-        </div>
-      </div>
-
-      <div class="text-sm font-black flex gap-3 flex-wrap">
-         <span class="pencil-badge crayon-yellow px-3.5 py-2">辨識模式: {{ inputSourceType }}</span>
-         <span class="pencil-badge crayon-mint px-3.5 py-2">調號: {{ keySignature }}</span>
-         <span class="pencil-badge crayon-sky px-3.5 py-2">拍號: {{ timeSignature }}</span>
-         <span class="pencil-badge crayon-pink px-3.5 py-2">總小節: {{ maxMeasureNumber }}</span>
-      </div>
-    </div>
-
-    <!-- 五線譜對照區（一行兩個小節、自動換行） -->
-    <div class="pencil-card p-6 md:p-8">
-      <h2 class="text-2xl font-black text-[#422e23] mb-4 flex items-center gap-2">
-        <span>🎼</span> 五線譜對照 <span class="text-xs font-bold text-[#8c6d58]">(一行固定顯示 2 個小節，自動折行)</span>
+  <!-- 小節範圍篩選器 -->
+  <div class="flex flex-wrap justify-between items-center gap-4 mb-6 px-2">
+    <div class="flex items-center gap-2">
+      <span class="text-xl">📖</span>
+      <h2 class="text-xl md:text-2xl font-black text-[#422e23]">
+        樂譜與指法上下對照區
       </h2>
-      <div id="vexflowContainer" class="pencil-card-inner p-4 overflow-x-auto min-h-[280px] flex justify-center items-center"></div>
+      <span class="text-xs bg-[#e2d6c3] px-2.5 py-1 rounded-full font-bold text-[#684c37]">一行二小節對齊</span>
     </div>
 
-    <!-- 直笛繪本指法卡區（一行兩個小節、自動換行） -->
-    <div class="pencil-card p-6 md:p-8 space-y-6">
-      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b-3 border-dashed border-[#d1b495]">
-        <h2 class="text-2xl font-black text-[#422e23] flex items-center gap-2">
-          <span>🎶</span> 直笛繪本指法卡 <span class="text-xs font-bold text-[#8c6d58]">(每行兩小節排列 ‧ 點擊聽發音)</span>
-        </h2>
+    <div class="flex items-center gap-3 text-xs md:text-sm bg-white p-2 rounded-2xl border-2 border-[#d1b495] shadow-sm">
+      <span class="font-black text-[#6e5532]">顯示小節：</span>
+      <button 
+        @click="filterMode = 'all'" 
+        :class="filterMode === 'all' ? 'pencil-btn-primary px-3 py-1 text-xs' : 'bg-transparent text-[#5a4234] px-3 py-1 font-bold'"
+      >全部</button>
+      <button 
+        @click="filterMode = 'range'" 
+        :class="filterMode === 'range' ? 'pencil-btn-primary px-3 py-1 text-xs' : 'bg-transparent text-[#5a4234] px-3 py-1 font-bold'"
+      >指定範圍</button>
 
-        <div class="flex flex-wrap items-center gap-3 text-sm bg-[#fff6e5] p-2.5 rounded-2xl border-2 border-[#d1b495]">
-          <span class="font-black text-[#6e5532] px-2">顯示範圍：</span>
-          <button 
-            @click="filterMode = 'all'" 
-            :class="filterMode === 'all' ? 'pencil-btn-primary' : 'bg-[#fffdf8] text-[#5a4234] border-2 border-[#d1b495]'"
-            class="px-4 py-1.5 rounded-xl font-black text-xs transition"
-          >全部小節</button>
-          <button 
-            @click="filterMode = 'range'" 
-            :class="filterMode === 'range' ? 'pencil-btn-primary' : 'bg-[#fffdf8] text-[#5a4234] border-2 border-[#d1b495]'"
-            class="px-4 py-1.5 rounded-xl font-black text-xs transition"
-          >指定小節</button>
+      <div v-if="filterMode === 'range'" class="flex items-center gap-1.5 font-black">
+        <input type="number" min="1" :max="maxMeasureNumber" v-model.number="rangeStart" class="w-12 px-1.5 py-0.5 border-2 border-[#5a3a29] rounded text-center">
+        <span>～</span>
+        <input type="number" min="1" :max="maxMeasureNumber" v-model.number="rangeEnd" class="w-12 px-1.5 py-0.5 border-2 border-[#5a3a29] rounded text-center">
+        <span>節</span>
+      </div>
+    </div>
+  </div>
 
-          <div v-if="filterMode === 'range'" class="flex items-center gap-2 ml-1 text-xs font-black text-[#5a4234]">
-            <span>第</span>
-            <input type="number" min="1" :max="maxMeasureNumber" v-model.number="rangeStart" class="w-14 px-2 py-1 bg-white border-2 border-[#5a3a29] rounded-lg text-center font-black">
-            <span>到</span>
-            <input type="number" min="1" :max="maxMeasureNumber" v-model.number="rangeEnd" class="w-14 px-2 py-1 bg-white border-2 border-[#5a3a29] rounded-lg text-center font-black">
-            <span>節</span>
-          </div>
+  <!-- 核心對照主體：一行固定 2 個小節，且每一小節內「上方五線譜」與「下方指法」垂直對齊 -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div 
+      v-for="mNum in filteredMeasureNumbers" 
+      :key="mNum" 
+      class="measure-box p-4 md:p-5 flex flex-col justify-between"
+    >
+      <!-- 小節標題列 -->
+      <div class="flex items-center justify-between pb-2 mb-2 border-b-2 border-dashed border-[#e6d3ba]">
+        <div class="flex items-center gap-2">
+          <span class="bg-[#ff8b7d] text-white px-3 py-0.5 rounded-full font-black text-xs border border-[#5a3a29]">
+            第 {{ mNum }} 小節
+          </span>
+          <span v-if="measureHasTriplet(mNum)" class="bg-[#fef08a] text-[#854d0e] border border-[#a16207] text-[11px] font-black px-2 py-0.5 rounded-md">
+            含有 3 連音
+          </span>
         </div>
+        <button @click="playMeasure(mNum)" class="text-xs bg-[#e8f5e9] hover:bg-[#c8e6c9] text-[#2e7d32] border border-[#2e7d32] font-black px-2.5 py-1 rounded-xl flex items-center gap-1 transition">
+          <span>▶</span> 試聽本小節
+        </button>
       </div>
 
-      <!-- 採用 grid-cols-1 lg:grid-cols-2 設定一行兩個小節 -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div v-for="mNum in filteredMeasureNumbers" :key="mNum" class="pencil-card-inner p-5 space-y-4">
-          <div class="font-black text-[#b84f37] text-base flex items-center gap-3">
-            <span class="pencil-btn-primary px-4 py-1 text-xs shadow-none">第 {{ mNum }} 小節</span>
-            <div class="h-[3px] bg-[#e0cba8] flex-1 rounded-full"></div>
+      <!-- 上方：本小節五線譜容器 (Vexflow 精準渲染) -->
+      <div class="bg-white rounded-xl border-2 border-[#eedcc8] p-2 flex justify-center items-center overflow-x-auto min-h-[140px]">
+        <div :id="'vex-measure-' + mNum" class="w-full flex justify-center"></div>
+      </div>
+
+      <!-- 對齊箭頭指引 -->
+      <div class="flex items-center justify-center my-2 text-[#b09681] text-xs font-black gap-2">
+        <span class="h-[1px] bg-[#eedcc8] flex-1"></span>
+        <span>⬇ 對應音符吹奏指法 ⬇</span>
+        <span class="h-[1px] bg-[#eedcc8] flex-1"></span>
+      </div>
+
+      <!-- 下方：本小節音符對照直笛指法卡（水平均勻對應音符排列） -->
+      <div class="grid gap-2 items-stretch" :style="{ gridTemplateColumns: `repeat(${notesByMeasure[mNum]?.length || 1}, minmax(0, 1fr))` }">
+        <div 
+          v-for="note in notesByMeasure[mNum]" 
+          :key="note.id"
+          @click="onNoteClick(note)"
+          :class="[
+            note.is_rest ? 'bg-[#f4ebd0] border-2 border-[#d6c4b2]' : 'bg-white border-2 border-[#7c5b48] hover:border-[#ff6854] cursor-pointer shadow-sm',
+            selectedNoteId === note.id ? 'active-note-card' : '',
+            note.tieStop ? 'border-dashed border-[#0284c7]' : ''
+          ]"
+          class="p-2 rounded-xl flex flex-col items-center justify-between transition-all duration-150 min-h-[275px] text-center relative"
+        >
+          <!-- 連結線指示徽章 -->
+          <div v-if="note.tieStart" class="absolute -top-2.5 right-1 bg-[#0284c7] text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow">
+            Tie 始 ⌢
+          </div>
+          <div v-if="note.tieStop" class="absolute -top-2.5 left-1 bg-[#bae6fd] text-[#0369a1] border border-[#0284c7] text-[9px] font-black px-1.5 py-0.5 rounded-full shadow">
+            ⌣ 延音(不吐音)
           </div>
 
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div 
-              v-for="note in notesByMeasure[mNum]" 
-              :key="note.id"
-              @click="!note.is_rest ? playTone(note.frequency) : null"
-              :class="note.is_rest ? 'bg-[#f4ebd0] opacity-80 border-2 border-[#c8b49c]' : 'bg-[#ffffff] hover:border-[#ff7666] hover:shadow-lg cursor-pointer border-2.5 border-[#6b4c3b]'"
-              class="p-3 rounded-2xl transition flex flex-col items-center justify-between min-h-[290px] relative shadow-sm"
-            >
-              <div v-if="note.is_rest" class="my-auto text-center font-black text-[#8c7362]">
-                  <span class="text-3xl block mb-2">💤</span>
-                  <span class="text-sm">休止符</span><br>
-                  <span class="text-xs font-bold text-[#a08875]">{{ note.duration }} 拍</span>
-              </div>
+          <!-- 音符標籤 (唱名、時值、三連音、附點標籤) -->
+          <div class="w-full pb-1 border-b border-dashed border-[#e6d3ba] flex flex-col items-center">
+            <div class="flex items-center justify-center gap-1 flex-wrap">
+              <span v-if="!note.is_rest" class="text-base font-black text-[#e0533c]">{{ note.pitch }}</span>
+              <span v-else class="text-xs font-black text-[#8c7362]">休止</span>
               
-              <template v-else>
-                  <div class="flex justify-between items-center w-full text-[#5a4234] font-black border-b-2 border-dashed border-[#e6d3ba] pb-1.5 text-xs">
-                      <span class="text-[#e0533c] text-lg font-black">{{ note.pitch }}</span>
-                      <span class="text-[10px] bg-[#fde68a] px-2 py-0.5 rounded-full border border-[#b45309] text-[#78350f]">{{ note.duration }} 拍</span>
-                  </div>
-                  <!-- 直笛 SVG 圖示 -->
-                  <svg :id="'note-svg-' + note.id" viewBox="0 0 70 190" width="80" height="210" class="my-1 drop-shadow-sm"></svg>
-              </template>
+              <span v-if="note.isTriplet" class="bg-[#fed7aa] text-[#9a3412] text-[10px] font-black px-1 rounded border border-[#ea580c]">
+                3連
+              </span>
+
+              <span v-if="note.isDotted" class="bg-[#f3e8ff] text-[#7c3aed] text-[10px] font-black px-1 rounded border border-[#a855f7]">
+                附點
+              </span>
             </div>
+            
+            <span class="text-[10px] text-[#78350f] bg-[#fde68a] px-1.5 py-0.2 rounded-full font-bold mt-0.5">
+              {{ note.durationLabel || (note.duration + '拍') }}
+            </span>
+          </div>
+
+          <!-- 中間：休止符 或 直笛圖示 -->
+          <div v-if="note.is_rest" class="my-auto text-[#8c7362]">
+            <span class="text-2xl block mb-1">💤</span>
+            <span class="text-[11px] font-black">空拍休息</span>
+          </div>
+
+          <div v-else class="my-1 flex-1 flex items-center justify-center">
+            <svg :id="'note-svg-' + note.id" viewBox="0 0 64 180" width="56" height="158" class="drop-shadow-sm"></svg>
+          </div>
+
+          <!-- 底部小字按孔提示 -->
+          <div v-if="!note.is_rest" class="text-[10px] text-[#6b4c3b] font-black w-full bg-[#fdf8f3] py-0.5 rounded border border-[#e8d8c8]">
+            <span v-if="note.tieStop" class="text-[#0284c7] font-black">氣息延續孔不變</span>
+            <span v-else>{{ getHoleCountText(note) }}</span>
           </div>
         </div>
       </div>
-
     </div>
+  </div>
 
-  </main>
 </div>
 
 <script>
-// 直笛指法與頻率資料庫
+// 高音直笛 (Soprano Recorder in C) 指法與標準頻率資料庫
+// 孔位陣列順序: [0:背孔大拇指, 1:左食指, 2:左中指, 3:左無名指, 4:右食指, 5:右中指, 6:右無名指, 7:右小指]
+// 數值說明: 1 = 全閉, 0 = 全開, 0.5 = 半開(高音捏孔或半孔)
 const RECORDER_DATABASE = {
   "C4":  { baroque: [1, 1, 1, 1, 1, 1, 1, 1], german: [1, 1, 1, 1, 1, 1, 1, 1], freq: 261.63 },
   "C#4": { baroque: [1, 1, 1, 1, 1, 1, 1, 0.5], german: [1, 1, 1, 1, 1, 1, 1, 0.5], freq: 277.18 },
@@ -272,61 +490,138 @@ const RECORDER_DATABASE = {
   "E5":  { baroque: [0.5, 1, 1, 1, 1, 1, 0, 0], german: [0.5, 1, 1, 1, 1, 1, 0, 0], freq: 659.25 },
   "F5":  { baroque: [0.5, 1, 1, 1, 1, 0, 1, 0], german: [0.5, 1, 1, 1, 1, 0, 0, 0], freq: 698.46 },
   "F#5": { baroque: [0.5, 1, 1, 1, 0, 1, 0, 0], german: [0.5, 1, 1, 1, 0, 1, 0, 0], freq: 739.99 },
+  "Gb5": { baroque: [0.5, 1, 1, 1, 0, 1, 0, 0], german: [0.5, 1, 1, 1, 0, 1, 0, 0], freq: 739.99 },
   "G5":  { baroque: [0.5, 1, 1, 1, 0, 0, 0, 0], german: [0.5, 1, 1, 1, 0, 0, 0, 0], freq: 783.99 },
+  "G#5": { baroque: [0.5, 1, 1, 0, 1, 0, 0, 0], german: [0.5, 1, 1, 0, 1, 0, 0, 0], freq: 830.61 },
+  "Ab5": { baroque: [0.5, 1, 1, 0, 1, 0, 0, 0], german: [0.5, 1, 1, 0, 1, 0, 0, 0], freq: 830.61 },
   "A5":  { baroque: [0.5, 1, 1, 0, 0, 0, 0, 0], german: [0.5, 1, 1, 0, 0, 0, 0, 0], freq: 880.00 },
-  "C6":  { baroque: [0.5, 1, 0, 1, 1, 0, 1, 1], german: [0.5, 1, 0, 1, 1, 0, 1, 1], freq: 1046.50 }
+  "Bb5": { baroque: [0.5, 1, 0, 1, 1, 0, 0, 0], german: [0.5, 1, 0, 1, 1, 0, 0, 0], freq: 932.33 },
+  "B5":  { baroque: [0.5, 1, 0, 1, 1, 0, 1, 0], german: [0.5, 1, 0, 1, 1, 0, 1, 0], freq: 987.77 },
+  "C6":  { baroque: [0.5, 1, 0, 1, 1, 0, 1, 1], german: [0.5, 1, 0, 1, 1, 0, 1, 1], freq: 1046.50 },
+  "D6":  { baroque: [0.5, 0, 1, 1, 1, 0, 1, 0], german: [0.5, 0, 1, 1, 1, 0, 1, 0], freq: 1174.66 }
 };
 
-function quantizeDuration(rawDur) {
-  const standards = [0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 4.0];
-  if (rawDur <= 0) return 0.5;
-  if (rawDur >= 4.0) return 4.0;
-  let best = standards[0];
-  let minDiff = Math.abs(rawDur - standards[0]);
-  for (let s of standards) {
-    let diff = Math.abs(rawDur - s);
-    if (diff < minDiff) { minDiff = diff; best = s; }
+// 包含三連音(1/3, 2/3 拍)與附點音符的高精度時值量化
+function quantizeDurationWithTriplets(rawDur) {
+  const candidateList = [
+    { value: 0.25, isTriplet: false, isDotted: false, label: "16分音符 (1/4拍)", vex: '16' },
+    { value: 0.3333, isTriplet: true, isDotted: false, label: "8分3連音 (1/3拍)", vex: '8' },
+    { value: 0.5, isTriplet: false, isDotted: false, label: "8分音符 (1/2拍)", vex: '8' },
+    { value: 0.6667, isTriplet: true, isDotted: false, label: "4分3連音 (2/3拍)", vex: 'q' },
+    { value: 0.75, isTriplet: false, isDotted: true, label: "附點8分 (3/4拍)", vex: '8d' },
+    { value: 1.0, isTriplet: false, isDotted: false, label: "4分音符 (1拍)", vex: 'q' },
+    { value: 1.5, isTriplet: false, isDotted: true, label: "附點4分 (1.5拍)", vex: 'qd' },
+    { value: 2.0, isTriplet: false, isDotted: false, label: "2分音符 (2拍)", vex: 'h' },
+    { value: 3.0, isTriplet: false, isDotted: true, label: "附點2分 (3拍)", vex: 'hd' },
+    { value: 4.0, isTriplet: false, isDotted: false, label: "全音符 (4拍)", vex: 'w' }
+  ];
+
+  let best = candidateList[0];
+  let minDiff = 999;
+  for (const c of candidateList) {
+    const diff = Math.abs(rawDur - c.value);
+    if (diff < minDiff) {
+      minDiff = diff;
+      best = c;
+    }
   }
   return best;
 }
 
+// 解析 MusicXML：精確讀取 <tie>, <tied>, <dot>, <time-modification> 等標記
 function parseMusicXMLString(xmlText) {
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(xmlText, "text/xml");
-  let timeSig = "4/4"; let keySig = "C"; let notes = []; let noteId = 0; let divisions = 1;
-  const fifthsMap = { "-7": "Cb", "-6": "Gb", "-5": "Db", "-4": "Ab", "-3": "Eb", "-2": "Bb", "-1": "F", "0": "C", "1": "G", "2": "D", "3": "A", "4": "E", "5": "B", "6": "F#", "7": "C#" };
+  let timeSig = "4/4";
+  let keySig = "C";
+  let notes = [];
+  let noteId = 0;
+  let divisions = 1;
+
+  const fifthsMap = {
+    "-7": "Cb", "-6": "Gb", "-5": "Db", "-4": "Ab", "-3": "Eb", "-2": "Bb", "-1": "F",
+    "0": "C", "1": "G", "2": "D", "3": "A", "4": "E", "5": "B", "6": "F#", "7": "C#"
+  };
 
   const part = xmlDoc.querySelector("part");
-  if (!part) throw new Error("無效的 MusicXML");
+  if (!part) throw new Error("無效的 MusicXML 檔案");
 
   const measures = part.querySelectorAll("measure");
   measures.forEach((measureEl, mIdx) => {
     const measureNum = parseInt(measureEl.getAttribute("number")) || (mIdx + 1);
+    
     const divEl = measureEl.querySelector("attributes > divisions");
-    if (divEl) divisions = parseInt(divEl.textContent) || 1;
+    if (divEl) divisions = parseInt(divEl.textContent) || divisions;
 
     const beatsEl = measureEl.querySelector("attributes > time > beats");
     const beatTypeEl = measureEl.querySelector("attributes > time > beat-type");
-    if (beatsEl && beatTypeEl) timeSig = `${beatsEl.textContent.trim()}/${beatTypeEl.textContent.trim()}`;
+    if (beatsEl && beatTypeEl) {
+      timeSig = `${beatsEl.textContent.trim()}/${beatTypeEl.textContent.trim()}`;
+    }
 
     const fifthsEl = measureEl.querySelector("attributes > key > fifths");
-    if (fifthsEl) keySig = fifthsMap[fifthsEl.textContent.trim()] || "C";
+    if (fifthsEl) {
+      keySig = fifthsMap[fifthsEl.textContent.trim()] || "C";
+    }
 
     const noteNodes = measureEl.querySelectorAll("note");
     noteNodes.forEach(nNode => {
       if (nNode.querySelector("chord")) return;
+
       const isRest = nNode.querySelector("rest") !== null;
       const durEl = nNode.querySelector("duration");
       const durVal = durEl ? parseFloat(durEl.textContent) : divisions;
-      const qDuration = quantizeDuration(durVal / divisions);
+
+      const timeModActual = nNode.querySelector("time-modification > actual-notes");
+      const isXmlTriplet = timeModActual && timeModActual.textContent.trim() === "3";
+      const hasDot = nNode.querySelector("dot") !== null;
+
+      const tieNodes = nNode.querySelectorAll("tie, tied");
+      let tieStart = false;
+      let tieStop = false;
+      tieNodes.forEach(tn => {
+        const type = tn.getAttribute("type");
+        if (type === "start") tieStart = true;
+        if (type === "stop") tieStop = true;
+      });
+
+      let beatsCount = durVal / divisions;
+      let qInfo = quantizeDurationWithTriplets(beatsCount);
+
+      if (isXmlTriplet) {
+        qInfo.isTriplet = true;
+        qInfo.label = beatsCount < 0.5 ? "8分3連音" : "4分3連音";
+        qInfo.vex = beatsCount < 0.5 ? '8' : 'q';
+      }
+      if (hasDot) {
+        qInfo.isDotted = true;
+      }
 
       if (isRest) {
-        notes.push({ id: noteId++, measure: measureNum, pitch: "Rest", step: "R", octave: 0, accidental: "", duration: qDuration, frequency: 0.0, fingering: null, is_rest: true });
+        notes.push({
+          id: noteId++,
+          measure: measureNum,
+          pitch: "Rest",
+          step: "B",
+          octave: 4,
+          accidental: "",
+          duration: qInfo.value,
+          durationLabel: qInfo.label,
+          vexDuration: qInfo.vex + 'r',
+          isTriplet: qInfo.isTriplet,
+          isDotted: qInfo.isDotted,
+          tieStart: false,
+          tieStop: false,
+          frequency: 0,
+          fingering: null,
+          is_rest: true
+        });
       } else {
         const stepEl = nNode.querySelector("pitch > step");
         const alterEl = nNode.querySelector("pitch > alter");
         const octaveEl = nNode.querySelector("pitch > octave");
         if (!stepEl || !octaveEl) return;
+
         const step = stepEl.textContent.trim();
         const octave = parseInt(octaveEl.textContent.trim());
         let alter = alterEl ? parseInt(alterEl.textContent.trim()) : 0;
@@ -334,28 +629,64 @@ function parseMusicXMLString(xmlText) {
         const pitchName = `${step}${acc}${octave}`;
         const fingeringData = RECORDER_DATABASE[pitchName] || null;
 
-        notes.push({ id: noteId++, measure: measureNum, pitch: pitchName, step, octave, accidental: acc, duration: qDuration, frequency: fingeringData ? fingeringData.freq : 440.0, fingering: fingeringData ? { baroque: fingeringData.baroque, german: fingeringData.german } : null, is_rest: false });
+        notes.push({
+          id: noteId++,
+          measure: measureNum,
+          pitch: pitchName,
+          step: step,
+          octave: octave,
+          accidental: acc,
+          duration: qInfo.value,
+          durationLabel: qInfo.label,
+          vexDuration: qInfo.vex,
+          isTriplet: qInfo.isTriplet,
+          isDotted: qInfo.isDotted,
+          tieStart: tieStart,
+          tieStop: tieStop,
+          frequency: fingeringData ? fingeringData.freq : 440.0,
+          fingering: fingeringData ? { baroque: fingeringData.baroque, german: fingeringData.german } : null,
+          is_rest: false
+        });
       }
     });
   });
+
   return { notes, timeSignature: timeSig, keySignature: keySig };
 }
 
-const DEMO_NOTES = [
-  { id: 0, measure: 1, pitch: "C4", step: "C", octave: 4, accidental: "", duration: 1.0, frequency: 261.63, fingering: RECORDER_DATABASE["C4"], is_rest: false },
-  { id: 1, measure: 1, pitch: "C4", step: "C", octave: 4, accidental: "", duration: 1.0, frequency: 261.63, fingering: RECORDER_DATABASE["C4"], is_rest: false },
-  { id: 2, measure: 1, pitch: "G4", step: "G", octave: 4, accidental: "", duration: 1.0, frequency: 392.00, fingering: RECORDER_DATABASE["G4"], is_rest: false },
-  { id: 3, measure: 1, pitch: "G4", step: "G", octave: 4, accidental: "", duration: 1.0, frequency: 392.00, fingering: RECORDER_DATABASE["G4"], is_rest: false },
-  { id: 4, measure: 2, pitch: "A4", step: "A", octave: 4, accidental: "", duration: 1.0, frequency: 440.00, fingering: RECORDER_DATABASE["A4"], is_rest: false },
-  { id: 5, measure: 2, pitch: "A4", step: "A", octave: 4, accidental: "", duration: 1.0, frequency: 440.00, fingering: RECORDER_DATABASE["A4"], is_rest: false },
-  { id: 6, measure: 2, pitch: "G4", step: "G", octave: 4, accidental: "", duration: 2.0, frequency: 392.00, fingering: RECORDER_DATABASE["G4"], is_rest: false },
-  { id: 7, measure: 3, pitch: "F4", step: "F", octave: 4, accidental: "", duration: 1.0, frequency: 349.23, fingering: RECORDER_DATABASE["F4"], is_rest: false },
-  { id: 8, measure: 3, pitch: "F4", step: "F", octave: 4, accidental: "", duration: 1.0, frequency: 349.23, fingering: RECORDER_DATABASE["F4"], is_rest: false },
-  { id: 9, measure: 3, pitch: "E4", step: "E", octave: 4, accidental: "", duration: 1.0, frequency: 329.63, fingering: RECORDER_DATABASE["E4"], is_rest: false },
-  { id: 10, measure: 3, pitch: "E4", step: "E", octave: 4, accidental: "", duration: 1.0, frequency: 329.63, fingering: RECORDER_DATABASE["E4"], is_rest: false },
-  { id: 11, measure: 4, pitch: "D4", step: "D", octave: 4, accidental: "", duration: 1.0, frequency: 293.66, fingering: RECORDER_DATABASE["D4"], is_rest: false },
-  { id: 12, measure: 4, pitch: "D4", step: "D", octave: 4, accidental: "", duration: 1.0, frequency: 293.66, fingering: RECORDER_DATABASE["D4"], is_rest: false },
-  { id: 13, measure: 4, pitch: "C4", step: "C", octave: 4, accidental: "", duration: 2.0, frequency: 261.63, fingering: RECORDER_DATABASE["C4"], is_rest: false }
+// 完整示範曲：第 2 小節精準呈現【音型一 (附點八分+十六分連槓)】與【音型二 (高音八分三連音符桿朝下)】
+const TRIPLET_DEMO_NOTES = [
+  // 第 1 小節【低音八分三連音(符桿朝上) + 附點四分音符 + 單獨符尾八分音符】：
+  { id: 101, measure: 1, pitch: "C4", step: "C", octave: 4, accidental: "", duration: 0.333, durationLabel: "8分3連音", vexDuration: "8", isTriplet: true, isDotted: false, frequency: 261.63, fingering: RECORDER_DATABASE["C4"], is_rest: false },
+  { id: 102, measure: 1, pitch: "D4", step: "D", octave: 4, accidental: "", duration: 0.333, durationLabel: "8分3連音", vexDuration: "8", isTriplet: true, isDotted: false, frequency: 293.66, fingering: RECORDER_DATABASE["D4"], is_rest: false },
+  { id: 103, measure: 1, pitch: "E4", step: "E", octave: 4, accidental: "", duration: 0.333, durationLabel: "8分3連音", vexDuration: "8", isTriplet: true, isDotted: false, frequency: 329.63, fingering: RECORDER_DATABASE["E4"], is_rest: false },
+  { id: 104, measure: 1, pitch: "G4", step: "G", octave: 4, accidental: "", duration: 1.5, durationLabel: "附點4分 (1.5拍)", vexDuration: "qd", isTriplet: false, isDotted: true, frequency: 392.00, fingering: RECORDER_DATABASE["G4"], is_rest: false },
+  { id: 105, measure: 1, pitch: "A4", step: "A", octave: 4, accidental: "", duration: 0.5, durationLabel: "8分(單獨符尾)", vexDuration: "8", isTriplet: false, isDotted: false, frequency: 440.00, fingering: RECORDER_DATABASE["A4"], is_rest: false },
+  { id: 106, measure: 1, pitch: "B4", step: "B", octave: 4, accidental: "", duration: 1.0, durationLabel: "4分音符 (1拍)", vexDuration: "q", isTriplet: false, isDotted: false, frequency: 493.88, fingering: RECORDER_DATABASE["B4"], is_rest: false },
+
+  // 第 2 小節【重點對照】：
+  // 【音型一】：D5 (附點八分 0.75拍) + C5 (十六分 0.25拍) —— 符桿朝下、主符槓在下連線、十六分次級符槓向內
+  { id: 107, measure: 2, pitch: "D5", step: "D", octave: 5, accidental: "", duration: 0.75, durationLabel: "附點8分 (3/4拍)", vexDuration: "8d", isTriplet: false, isDotted: true, frequency: 587.33, fingering: RECORDER_DATABASE["D5"], is_rest: false },
+  { id: 108, measure: 2, pitch: "C5", step: "C", octave: 5, accidental: "", duration: 0.25, durationLabel: "16分音符 (1/4拍)", vexDuration: "16", isTriplet: false, isDotted: false, frequency: 523.25, fingering: RECORDER_DATABASE["C5"], is_rest: false },
+  // 【音型二】：D5 + B4 + C5 (高音八分三連音) —— 符桿朝下、主符槓在下、數字 3 在下正中央無方括號
+  { id: 109, measure: 2, pitch: "D5", step: "D", octave: 5, accidental: "", duration: 0.333, durationLabel: "8分3連音", vexDuration: "8", isTriplet: true, isDotted: false, frequency: 587.33, fingering: RECORDER_DATABASE["D5"], is_rest: false },
+  { id: 110, measure: 2, pitch: "B4", step: "B", octave: 4, accidental: "", duration: 0.333, durationLabel: "8分3連音", vexDuration: "8", isTriplet: true, isDotted: false, frequency: 493.88, fingering: RECORDER_DATABASE["B4"], is_rest: false },
+  { id: 111, measure: 2, pitch: "C5", step: "C", octave: 5, accidental: "", duration: 0.333, durationLabel: "8分3連音", vexDuration: "8", isTriplet: true, isDotted: false, frequency: 523.25, fingering: RECORDER_DATABASE["C5"], is_rest: false },
+  // 連結線 (Tie) 示範：跨拍連結延長
+  { id: 112, measure: 2, pitch: "A4", step: "A", octave: 4, accidental: "", duration: 1.0, durationLabel: "4分 (Tie 始)", vexDuration: "q", isTriplet: false, isDotted: false, tieStart: true, tieStop: false, frequency: 440.00, fingering: RECORDER_DATABASE["A4"], is_rest: false },
+  { id: 113, measure: 2, pitch: "A4", step: "A", octave: 4, accidental: "", duration: 1.0, durationLabel: "4分 (Tie 延音)", vexDuration: "q", isTriplet: false, isDotted: false, tieStart: false, tieStop: true, frequency: 440.00, fingering: RECORDER_DATABASE["A4"], is_rest: false },
+
+  // 第 3 小節【四分三連音 (共 2 拍，方括號 [ 3 ]) + 附點二分音符】：
+  { id: 114, measure: 3, pitch: "G4", step: "G", octave: 4, accidental: "", duration: 0.667, durationLabel: "4分3連音", vexDuration: "q", isTriplet: true, isDotted: false, frequency: 392.00, fingering: RECORDER_DATABASE["G4"], is_rest: false },
+  { id: 115, measure: 3, pitch: "A4", step: "A", octave: 4, accidental: "", duration: 0.667, durationLabel: "4分3連音", vexDuration: "q", isTriplet: true, isDotted: false, frequency: 440.00, fingering: RECORDER_DATABASE["A4"], is_rest: false },
+  { id: 116, measure: 3, pitch: "B4", step: "B", octave: 4, accidental: "", duration: 0.667, durationLabel: "4分3連音", vexDuration: "q", isTriplet: true, isDotted: false, frequency: 493.88, fingering: RECORDER_DATABASE["B4"], is_rest: false },
+  { id: 117, measure: 3, pitch: "C5", step: "C", octave: 5, accidental: "", duration: 1.0, durationLabel: "4分音符", vexDuration: "q", isTriplet: false, isDotted: false, frequency: 523.25, fingering: RECORDER_DATABASE["C5"], is_rest: false },
+
+  // 第 4 小節【八分音符成組連槓 + 結尾音】：
+  { id: 118, measure: 4, pitch: "E4", step: "E", octave: 4, accidental: "", duration: 0.5, durationLabel: "8分(成組連槓)", vexDuration: "8", isTriplet: false, isDotted: false, frequency: 329.63, fingering: RECORDER_DATABASE["E4"], is_rest: false },
+  { id: 119, measure: 4, pitch: "F4", step: "F", octave: 4, accidental: "", duration: 0.5, durationLabel: "8分(成組連槓)", vexDuration: "8", isTriplet: false, isDotted: false, frequency: 349.23, fingering: RECORDER_DATABASE["F4"], is_rest: false },
+  { id: 120, measure: 4, pitch: "Rest", step: "B", octave: 4, accidental: "", duration: 1.0, durationLabel: "4分休止符", vexDuration: "qr", isTriplet: false, isDotted: false, frequency: 0, fingering: null, is_rest: true },
+  { id: 121, measure: 4, pitch: "C4", step: "C", octave: 4, accidental: "", duration: 2.0, durationLabel: "2分音符 (2拍)", vexDuration: "h", isTriplet: false, isDotted: false, frequency: 261.63, fingering: RECORDER_DATABASE["C4"], is_rest: false }
 ];
 
 const { createApp, ref, computed, watch, nextTick, onMounted } = Vue;
@@ -365,19 +696,23 @@ createApp({
     const parsedNotes = ref([]);
     const timeSignature = ref("4/4");
     const keySignature = ref("C");
-    const fingeringType = ref('baroque');
+    const fingeringType = ref('baroque'); // baroque | german
     const filterMode = ref('all');
     const rangeStart = ref(1);
-    const rangeEnd = ref(1);
-    const inputSourceType = ref("內建預設");
-    
-    // AI 辨識圖像狀態
-    const isProcessingAI = ref(false);
-    const uploadedImageUrl = ref(null);
-    const imageWidth = ref(0);
-    const imageHeight = ref(0);
+    const rangeEnd = ref(4);
+    const inputSourceType = ref("專業樂理示範曲");
+    const selectedNoteId = ref(null);
+    const toastMessage = ref("");
+    const showTheoryGuide = ref(true);
 
     let audioCtx = null;
+
+    const showToast = (msg) => {
+      toastMessage.value = msg;
+      setTimeout(() => {
+        if (toastMessage.value === msg) toastMessage.value = "";
+      }, 4000);
+    };
 
     const notesByMeasure = computed(() => {
       const map = {};
@@ -390,101 +725,433 @@ createApp({
 
     const sortedMeasureNumbers = computed(() => Object.keys(notesByMeasure.value).map(Number).sort((a, b) => a - b));
     const maxMeasureNumber = computed(() => sortedMeasureNumbers.value.length > 0 ? Math.max(...sortedMeasureNumbers.value) : 1);
+
     const filteredMeasureNumbers = computed(() => {
       if (filterMode.value === 'all') return sortedMeasureNumbers.value;
       return sortedMeasureNumbers.value.filter(m => m >= rangeStart.value && m <= rangeEnd.value);
     });
 
-    const playTone = (freq) => {
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (!freq) return;
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.5);
+    const hasTripletsDetected = computed(() => parsedNotes.value.some(n => n.isTriplet));
+    const measureHasTriplet = (mNum) => (notesByMeasure.value[mNum] || []).some(n => n.isTriplet);
+
+    // 取得孔位文字說明
+    const getHoleCountText = (note) => {
+      if (!note || note.is_rest || !note.fingering) return '';
+      const holes = note.fingering[fingeringType.value] || note.fingering.baroque;
+      if (!holes) return '';
+      const closed = [];
+      holes.forEach((h, idx) => {
+        if (h === 1) closed.push(idx);
+        else if (h === 0.5) closed.push(`${idx}(半)`);
+      });
+      if (closed.length === 8 && !closed.some(c => typeof c === 'string')) return '全按 (0~7)';
+      if (closed.length === 0) return '全開';
+      return '按孔: ' + closed.join(',');
     };
 
-    // AI OMR 樂譜圖像分析演算法
-    const processImageAI = (file) => {
-      isProcessingAI.value = true;
-      uploadedImageUrl.value = URL.createObjectURL(file);
-      inputSourceType.value = "AI 圖像光學辨識 (OMR)";
+    const playTone = (freq, durationSec = 0.5) => {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        if (!freq || freq <= 0) return;
 
-      const img = new Image();
-      img.src = uploadedImageUrl.value;
-      img.onload = () => {
-        imageWidth.value = img.width;
-        imageHeight.value = img.height;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        // 三角波溫潤質感模擬木管直笛
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
 
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx.drawImage(img, 0, 0);
+        const now = audioCtx.currentTime;
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.linearRampToValueAtTime(0.28, now + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + durationSec);
 
-        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const data = imgData.data;
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + durationSec);
+      } catch (err) {
+        console.warn("AudioContext 播放提示:", err);
+      }
+    };
 
-        let totalBrightness = 0;
-        for (let i = 0; i < data.length; i += 4) {
-          totalBrightness += (data[i] + data[i+1] + data[i+2]) / 3;
-        }
-        const avgBrightness = totalBrightness / (data.length / 4);
+    const onNoteClick = (note) => {
+      selectedNoteId.value = note.id;
+      if (!note.is_rest) {
+        const durSec = Math.max(0.3, (note.duration || 1.0) * 0.5);
+        playTone(note.frequency, durSec);
+      }
+    };
 
+    const playMeasure = (mNum) => {
+      const mNotes = notesByMeasure.value[mNum] || [];
+      if (mNotes.length === 0) return;
+
+      let elapsed = 0;
+      mNotes.forEach((n, idx) => {
+        const noteDurSec = Math.max(0.25, (n.duration || 1.0) * 0.55);
         setTimeout(() => {
-          const aiPitches = ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5", "D5", "E5"];
-          const generatedNotes = [];
-          let noteId = 0;
-          let measure = 1;
-          let measureBeatSum = 0;
-
-          const totalNotesToGenerate = 12;
-
-          for (let i = 0; i < totalNotesToGenerate; i++) {
-            const pitchIndex = (i * 2 + Math.floor(avgBrightness / 20)) % aiPitches.length;
-            const pitchName = aiPitches[pitchIndex];
-            const duration = (i % 3 === 2) ? 2.0 : 1.0;
-            const fingeringData = RECORDER_DATABASE[pitchName] || null;
-
-            generatedNotes.push({
-              id: noteId++,
-              measure: measure,
-              pitch: pitchName,
-              step: pitchName[0],
-              octave: parseInt(pitchName.slice(-1)),
-              accidental: "",
-              duration: duration,
-              frequency: fingeringData ? fingeringData.freq : 440.0,
-              fingering: fingeringData ? { baroque: fingeringData.baroque, german: fingeringData.german } : null,
-              is_rest: false
-            });
-
-            measureBeatSum += duration;
-            if (measureBeatSum >= 4) {
-              measure++;
-              measureBeatSum = 0;
-            }
+          selectedNoteId.value = n.id;
+          if (!n.is_rest) {
+            playTone(n.frequency, noteDurSec);
           }
+        }, elapsed * 1000);
+        elapsed += noteDurSec;
+      });
 
-          parsedNotes.value = generatedNotes;
-          timeSignature.value = "4/4";
-          keySignature.value = "C";
-          rangeStart.value = 1;
-          rangeEnd.value = maxMeasureNumber.value;
-          isProcessingAI.value = false;
+      setTimeout(() => {
+        selectedNoteId.value = null;
+      }, elapsed * 1000);
+    };
 
-          nextTick(() => {
-            renderVexFlowMultiStave();
-            renderAllFingerings();
-          });
-        }, 1200);
-      };
+    const renderMeasureStave = (mNum) => {
+      const containerId = 'vex-measure-' + mNum;
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = "";
+
+      const VF = Vex.Flow;
+      const mNotes = notesByMeasure.value[mNum] || [];
+      if (mNotes.length === 0) return;
+
+      const containerWidth = container.parentElement.clientWidth || 440;
+      const staveWidth = Math.max(300, containerWidth - 20);
+      const staveHeight = 145;
+
+      const renderer = new VF.Renderer(container, VF.Renderer.Backends.SVG);
+      renderer.resize(staveWidth, staveHeight);
+      const context = renderer.getContext();
+
+      const stave = new VF.Stave(10, 15, staveWidth - 20);
+      
+      if (mNum === sortedMeasureNumbers.value[0]) {
+        stave.addClef("treble").addTimeSignature(timeSignature.value);
+        if (keySignature.value !== "C") stave.addKeySignature(keySignature.value);
+      } else {
+        stave.addClef("treble");
+      }
+
+      if (mNum === sortedMeasureNumbers.value[sortedMeasureNumbers.value.length - 1]) {
+        stave.setEndBarType(VF.Barline.type.END);
+      } else {
+        stave.setEndBarType(VF.Barline.type.SINGLE);
+      }
+
+      stave.setContext(context).draw();
+
+      const tsParts = timeSignature.value.split('/');
+      const numBeats = parseInt(tsParts[0]) || 4;
+      const beatValue = parseInt(tsParts[1]) || 4;
+
+      const vexNotes = [];
+      const tripletGroups = [];
+      let currentTripletNotes = [];
+      const ties = [];
+
+      mNotes.forEach((n, idx) => {
+        let cleanDur = n.vexDuration.replace('r', '');
+        let isDotted = n.isDotted || cleanDur.includes('d');
+        let vexBaseDur = cleanDur.replace('d', '');
+        if (n.is_rest) vexBaseDur += 'r';
+
+        const key = n.is_rest ? "b/4" : `${n.step.toLowerCase()}/${n.octave}`;
+        const staveNote = new VF.StaveNote({
+          clef: "treble",
+          keys: [key],
+          duration: vexBaseDur,
+          auto_stem: true
+        });
+
+        if (!n.is_rest && n.accidental) {
+          staveNote.addModifier(new VF.Accidental(n.accidental));
+        }
+        if (isDotted) {
+          staveNote.addModifier(new VF.Dot());
+        }
+
+        staveNote._raw = n;
+        staveNote._idx = idx;
+        vexNotes.push(staveNote);
+
+        if (n.isTriplet) {
+          currentTripletNotes.push(staveNote);
+          if (currentTripletNotes.length === 3) {
+            tripletGroups.push([...currentTripletNotes]);
+            currentTripletNotes = [];
+          }
+        } else {
+          if (currentTripletNotes.length === 3) {
+            tripletGroups.push([...currentTripletNotes]);
+          }
+          currentTripletNotes = [];
+        }
+      });
+
+      if (currentTripletNotes.length === 3) {
+        tripletGroups.push([...currentTripletNotes]);
+      }
+
+      // 連結線 (Tie) 配對
+      for (let i = 0; i < vexNotes.length; i++) {
+        const cur = vexNotes[i];
+        if (cur._raw.tieStart && !cur._raw.is_rest) {
+          if (i + 1 < vexNotes.length) {
+            const nextNote = vexNotes[i + 1];
+            if (nextNote._raw.tieStop && nextNote._raw.pitch === cur._raw.pitch) {
+              ties.push(new VF.StaveTie({
+                first_note: cur,
+                last_note: nextNote,
+                first_indices: [0],
+                last_indices: [0]
+              }));
+            }
+          } else {
+            ties.push(new VF.StaveTie({
+              first_note: cur,
+              first_indices: [0]
+            }));
+          }
+        } else if (cur._raw.tieStop && i === 0 && !cur._raw.is_rest) {
+          ties.push(new VF.StaveTie({
+            last_note: cur,
+            last_indices: [0]
+          }));
+        }
+      }
+
+      const tuplets = [];
+      const beams = [];
+
+      tripletGroups.forEach(group => {
+        const isEighthTriplet = group.some(sn => sn._raw && sn._raw.vexDuration.startsWith('8'));
+        const allNotes = group.filter(sn => !sn._raw.is_rest);
+        const hasRests = group.some(sn => sn._raw.is_rest);
+
+        // 依據西洋樂理計算整組三連音音高中心決定符桿朝向 (中心 >= B4 符桿一律朝下，符槓在下方)
+        let totalPitchVal = 0;
+        allNotes.forEach(sn => {
+          const stepVal = { 'c': 0, 'd': 1, 'e': 2, 'f': 3, 'g': 4, 'a': 5, 'b': 6 }[sn._raw.step.toLowerCase()] || 0;
+          totalPitchVal += sn._raw.octave * 7 + stepVal;
+        });
+        const avgPitch = allNotes.length > 0 ? totalPitchVal / allNotes.length : 33; // B4 = 34
+        const stemDirection = avgPitch >= 34 ? VF.Stem.DOWN : VF.Stem.UP;
+
+        // 整組音符統一指定符桿朝向
+        allNotes.forEach(sn => {
+          sn.setStemDirection(stemDirection);
+        });
+
+        // 西洋樂理規範：
+        // 1. 若為八分三連音且無休止符，符桿由一整條 Beam 相連，此時【不畫方括號 (bracketed: false)】。
+        // 2. 當符桿朝下 (Stem Down) 時，數字 3 必須置於下方 (LOCATION_BOTTOM)，如【音型二】！
+        const isFullyBeamed = isEighthTriplet && !hasRests && allNotes.length === group.length;
+        const tupletLocation = stemDirection === VF.Stem.DOWN ? VF.Tuplet.LOCATION_BOTTOM : VF.Tuplet.LOCATION_TOP;
+
+        const tuplet = new VF.Tuplet(group, {
+          num_notes: 3,
+          notes_occupied: 2,
+          location: tupletLocation,
+          bracketed: !isFullyBeamed, // 有連槓則無括號，純數字 3
+          ratioed: false
+        });
+        tuplets.push(tuplet);
+
+        // 八分三連音由實心粗符槓連為一體
+        if (isFullyBeamed) {
+          beams.push(new VF.Beam(allNotes));
+        }
+      });
+
+      // 非三連音之拍內短音符（如音型一：附點八分 + 十六分、雙八分音符）自動連槓處理
+      const regularBeamGroups = [];
+      let currentBeatGroup = [];
+      let currentBeatDuration = 0;
+
+      for (let i = 0; i < vexNotes.length; i++) {
+        const sn = vexNotes[i];
+        const raw = sn._raw;
+
+        if (raw.isTriplet || raw.is_rest) {
+          if (currentBeatGroup.length > 1) regularBeamGroups.push([...currentBeatGroup]);
+          currentBeatGroup = [];
+          currentBeatDuration = 0;
+          continue;
+        }
+
+        // 短時值音符：16分 (0.25), 8分 (0.5), 附點8分 (0.75)
+        const isBeamable = raw.duration === 0.25 || raw.duration === 0.5 || raw.duration === 0.75;
+
+        if (isBeamable) {
+          currentBeatGroup.push(sn);
+          currentBeatDuration += raw.duration;
+
+          // 滿 1 拍時成組結算 (如 0.75 + 0.25 = 1.0 或 0.5 + 0.5 = 1.0)
+          if (currentBeatDuration >= 0.99) {
+            if (currentBeatGroup.length > 1) {
+              regularBeamGroups.push([...currentBeatGroup]);
+            }
+            currentBeatGroup = [];
+            currentBeatDuration = 0;
+          }
+        } else {
+          if (currentBeatGroup.length > 1) regularBeamGroups.push([...currentBeatGroup]);
+          currentBeatGroup = [];
+          currentBeatDuration = 0;
+        }
+      }
+      if (currentBeatGroup.length > 1) regularBeamGroups.push([...currentBeatGroup]);
+
+      // 為拍內音型（如音型一）統一符桿朝向並建立符槓與次級符槓
+      regularBeamGroups.forEach(group => {
+        let totalPitchVal = 0;
+        group.forEach(sn => {
+          const stepVal = { 'c': 0, 'd': 1, 'e': 2, 'f': 3, 'g': 4, 'a': 5, 'b': 6 }[sn._raw.step.toLowerCase()] || 0;
+          totalPitchVal += sn._raw.octave * 7 + stepVal;
+        });
+        const avgPitch = totalPitchVal / group.length;
+        // B4 以上符桿朝下，符槓在下方
+        const stemDirection = avgPitch >= 34 ? VF.Stem.DOWN : VF.Stem.UP;
+
+        group.forEach(sn => {
+          sn.setStemDirection(stemDirection);
+        });
+
+        try {
+          beams.push(new VF.Beam(group));
+        } catch (err) {
+          console.warn("建立拍內符槓失敗:", err);
+        }
+      });
+
+      // 建立 Voice 並渲染排版
+      try {
+        const voice = new VF.Voice({ num_beats: numBeats, beat_value: beatValue });
+        voice.setMode(VF.Voice.Mode.SOFT);
+        voice.addTickables(vexNotes);
+
+        new VF.Formatter().joinVoices([voice]).format([voice], staveWidth - 75);
+        voice.draw(context, stave);
+
+        beams.forEach(b => {
+          try { b.setContext(context).draw(); } catch(e) {}
+        });
+
+        tuplets.forEach(t => {
+          try { t.setContext(context).draw(); } catch(e) {}
+        });
+
+        ties.forEach(tie => {
+          try { tie.setContext(context).draw(); } catch(e) {}
+        });
+      } catch (err) {
+        console.warn("小節五線譜繪製警告:", err);
+      }
+    };
+
+    const drawRecorderSVG = (svgId, holes) => {
+      const svg = document.getElementById(svgId);
+      if (!svg) return;
+      svg.innerHTML = '';
+      const strokeColor = "#4a3324";
+
+      // 吹嘴
+      const mouth = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      mouth.setAttribute("points", "22,5 42,5 38,16 26,16");
+      mouth.setAttribute("fill", "#edd5ba");
+      mouth.setAttribute("stroke", strokeColor);
+      mouth.setAttribute("stroke-width", "2.2");
+      svg.appendChild(mouth);
+
+      // 管身
+      const body = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      body.setAttribute("d", "M 23 16 L 41 16 L 39 168 Q 32 174 25 168 Z");
+      body.setAttribute("fill", "#fff8ed");
+      body.setAttribute("stroke", strokeColor);
+      body.setAttribute("stroke-width", "2.6");
+      svg.appendChild(body);
+
+      // 發音氣孔
+      const windowCut = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      windowCut.setAttribute("x", "28"); windowCut.setAttribute("y", "20");
+      windowCut.setAttribute("width", "8"); windowCut.setAttribute("height", "4");
+      windowCut.setAttribute("rx", "1");
+      windowCut.setAttribute("fill", "#4a3324");
+      svg.appendChild(windowCut);
+
+      // 8孔座標 (0:背孔, 1~7:正面孔)
+      const holeConfigs = [
+        { cx: 10, cy: 34, r: 4.8, isThumb: true },
+        { cx: 32, cy: 40, r: 5.0, isThumb: false },
+        { cx: 32, cy: 58, r: 5.0, isThumb: false },
+        { cx: 32, cy: 76, r: 5.0, isThumb: false },
+        { cx: 32, cy: 96, r: 5.0, isThumb: false },
+        { cx: 32, cy: 114, r: 5.0, isThumb: false },
+        { cx: 32, cy: 132, r: 4.2, isThumb: false },
+        { cx: 32, cy: 150, r: 4.0, isThumb: false }
+      ];
+
+      holes.forEach((val, idx) => {
+        const conf = holeConfigs[idx];
+        const isLeftHand = idx <= 3;
+        const fillColor = isLeftHand ? "#2563eb" : "#221e1d";
+
+        if (conf.isThumb) {
+          const guideLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          guideLine.setAttribute("x1", "15"); guideLine.setAttribute("y1", "34");
+          guideLine.setAttribute("x2", "23"); guideLine.setAttribute("y2", "34");
+          guideLine.setAttribute("stroke", "#c4a482");
+          guideLine.setAttribute("stroke-width", "1.5");
+          guideLine.setAttribute("stroke-dasharray", "2,2");
+          svg.appendChild(guideLine);
+        }
+
+        if (val === 0.5) {
+          const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+          const baseCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          baseCircle.setAttribute("cx", conf.cx); baseCircle.setAttribute("cy", conf.cy); baseCircle.setAttribute("r", conf.r);
+          baseCircle.setAttribute("fill", "#ffffff"); baseCircle.setAttribute("stroke", strokeColor); baseCircle.setAttribute("stroke-width", "2");
+          g.appendChild(baseCircle);
+
+          const halfPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          halfPath.setAttribute("d", `M ${conf.cx} ${conf.cy - conf.r} A ${conf.r} ${conf.r} 0 0 0 ${conf.cx} ${conf.cy + conf.r} Z`);
+          halfPath.setAttribute("fill", "#dc2626");
+          g.appendChild(halfPath);
+          svg.appendChild(g);
+        } else {
+          const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          circle.setAttribute("cx", conf.cx); circle.setAttribute("cy", conf.cy); circle.setAttribute("r", conf.r);
+          circle.setAttribute("stroke", strokeColor); circle.setAttribute("stroke-width", "2");
+          circle.setAttribute("fill", val === 1 ? fillColor : "#ffffff");
+          svg.appendChild(circle);
+        }
+      });
+    };
+
+    const renderAllVisuals = () => {
+      filteredMeasureNumbers.value.forEach(mNum => {
+        renderMeasureStave(mNum);
+      });
+
+      parsedNotes.value.forEach(note => {
+        if (!note.is_rest && note.fingering) {
+          const holes = note.fingering[fingeringType.value];
+          if (holes) drawRecorderSVG(`note-svg-${note.id}`, holes);
+        }
+      });
+    };
+
+    const loadSampleTripletDemo = () => {
+      inputSourceType.value = "專業示範曲 (三連音/連結線/附點)";
+      parsedNotes.value = TRIPLET_DEMO_NOTES;
+      timeSignature.value = "4/4";
+      keySignature.value = "C";
+      rangeStart.value = 1;
+      rangeEnd.value = 4;
+      showToast("已載入完整樂理示範曲！");
+      nextTick(() => {
+        renderAllVisuals();
+      });
     };
 
     const handleFileUpload = async (event) => {
@@ -493,23 +1160,15 @@ createApp({
 
       const fileName = file.name.toLowerCase();
 
-      if (fileName.match(/\.(png|jpg|jpeg|webp)$/)) {
-        processImageAI(file);
-        return;
-      }
-
-      uploadedImageUrl.value = null;
-
       try {
         let result = null;
 
         if (fileName.endsWith('.mxl')) {
-          inputSourceType.value = "MXL 壓縮檔";
+          inputSourceType.value = "MXL 壓縮樂譜";
           const zip = await JSZip.loadAsync(file);
-          const files = Object.keys(zip.files);
-          const target = files.find(f => f.endsWith('.xml') && !f.startsWith('META-INF/'));
-          if (!target) throw new Error("解壓縮未發現 XML");
-          const xmlText = await zip.file(target).async("text");
+          const xmlFilename = Object.keys(zip.files).find(name => name.endsWith('.xml') && !name.startsWith('META-INF/'));
+          if (!xmlFilename) throw new Error("MXL 內未找到樂譜 XML 檔案");
+          const xmlText = await zip.file(xmlFilename).async("text");
           result = parseMusicXMLString(xmlText);
 
         } else if (fileName.endsWith('.xml') || fileName.endsWith('.musicxml')) {
@@ -518,10 +1177,12 @@ createApp({
           result = parseMusicXMLString(text);
 
         } else if (fileName.endsWith('.mid') || fileName.endsWith('.midi')) {
-          inputSourceType.value = "MIDI 數位音樂";
+          inputSourceType.value = "MIDI 音樂檔案";
           const buffer = await file.arrayBuffer();
           const midi = new Midi(buffer);
-          let notes = []; let noteId = 0; let timeSig = "4/4";
+          let notes = [];
+          let noteId = 1;
+          let timeSig = "4/4";
 
           if (midi.header.timeSignatures.length > 0) {
             const ts = midi.header.timeSignatures[0].timeSignature;
@@ -529,16 +1190,16 @@ createApp({
           }
 
           const track = midi.tracks.find(t => t.notes.length > 0) || midi.tracks[0];
-          if (track) {
-            const trackNotes = track.notes.sort((a,b) => a.time - b.time);
+          if (track && track.notes.length > 0) {
+            const trackNotes = track.notes.sort((a, b) => a.time - b.time);
             const bpm = midi.header.tempos.length > 0 ? midi.header.tempos[0].bpm : 120;
-            const secondsPerBeat = 60 / bpm;
+            const secPerBeat = 60 / bpm;
             const beatsPerMeasure = parseInt(timeSig.split('/')[0]) || 4;
 
-            trackNotes.forEach((n) => {
-              const beatStart = n.time / secondsPerBeat;
-              const qDuration = quantizeDuration(n.duration / secondsPerBeat);
-              const measureNum = Math.floor(beatStart / beatsPerMeasure) + 1;
+            trackNotes.forEach(n => {
+              const rawBeats = n.duration / secPerBeat;
+              const qInfo = quantizeDurationWithTriplets(rawBeats);
+              const measureNum = Math.floor((n.time / secPerBeat) / beatsPerMeasure) + 1;
               const pitchName = n.name;
               const fingeringData = RECORDER_DATABASE[pitchName] || null;
 
@@ -549,7 +1210,13 @@ createApp({
                 step: pitchName[0],
                 octave: parseInt(pitchName.slice(-1)),
                 accidental: pitchName.includes("#") ? "#" : (pitchName.includes("b") ? "b" : ""),
-                duration: qDuration,
+                duration: qInfo.value,
+                durationLabel: qInfo.label,
+                vexDuration: qInfo.vex,
+                isTriplet: qInfo.isTriplet,
+                isDotted: qInfo.isDotted,
+                tieStart: false,
+                tieStop: false,
                 frequency: fingeringData ? fingeringData.freq : 440.0,
                 fingering: fingeringData ? { baroque: fingeringData.baroque, german: fingeringData.german } : null,
                 is_rest: false
@@ -557,6 +1224,9 @@ createApp({
             });
           }
           result = { notes, timeSignature: timeSig, keySignature: "C" };
+        } else {
+          showToast("圖片檔建議先透過 MuseScore 轉為 MusicXML 獲得最精確音高時值。");
+          return;
         }
 
         if (result && result.notes.length > 0) {
@@ -565,197 +1235,42 @@ createApp({
           keySignature.value = result.keySignature;
           rangeStart.value = 1;
           rangeEnd.value = maxMeasureNumber.value;
+          showToast(`成功解析 ${result.notes.length} 個音符！已自動排版。`);
 
           nextTick(() => {
-            renderVexFlowMultiStave();
-            renderAllFingerings();
+            renderAllVisuals();
           });
+        } else {
+          showToast("樂譜中未偵測到足夠的旋律音符。");
         }
       } catch (err) {
-        alert("樂譜讀取失敗，請確認檔案格式是否正確。");
         console.error(err);
+        showToast("樂譜讀取失敗，請確認檔案格式是否正確。");
       }
     };
 
-    const getVexDuration = (dur, isRest) => {
-        let base = 'q'; let dotted = false;
-        if (dur >= 3.5) base = 'w';
-        else if (dur >= 2.5) { base = 'h'; dotted = true; }
-        else if (dur >= 1.75) base = 'h';
-        else if (dur >= 1.25) { base = 'q'; dotted = true; }
-        else if (dur >= 0.85) base = 'q';
-        else if (dur >= 0.65) { base = '8'; dotted = true; }
-        else if (dur >= 0.35) base = '8';
-        else base = '16';
-        return { res: base + (isRest ? 'r' : ''), dotted };
-    };
+    window.addEventListener('resize', () => {
+      renderAllVisuals();
+    });
 
-    // 一行兩個小節、自動換行的 VexFlow 渲染演算法
-    const renderVexFlowMultiStave = () => {
-      const container = document.getElementById("vexflowContainer");
-      if (!container) return;
-      container.innerHTML = "";
-
-      const VF = Vex.Flow;
-      const measureNums = sortedMeasureNumbers.value;
-      if (measureNums.length === 0) return;
-
-      const measuresPerRow = 2; // 一行兩個小節
-      const staveWidth = 370;    // 小節固定寬度
-      const startX = 15;
-      const startY = 20;
-      const rowHeight = 140;     // 行距
-
-      const totalRows = Math.ceil(measureNums.length / measuresPerRow);
-      const totalCanvasWidth = startX * 2 + staveWidth * measuresPerRow;
-      const totalCanvasHeight = startY + totalRows * rowHeight;
-
-      const renderer = new VF.Renderer(container, VF.Renderer.Backends.SVG);
-      renderer.resize(totalCanvasWidth, totalCanvasHeight);
-      const context = renderer.getContext();
-
-      const tsParts = timeSignature.value.split('/');
-      const numBeats = parseInt(tsParts[0]) || 4;
-      const beatValue = parseInt(tsParts[1]) || 4;
-
-      measureNums.forEach((mNum, idx) => {
-        const rowIndex = Math.floor(idx / measuresPerRow);
-        const colIndex = idx % measuresPerRow;
-
-        const x = startX + colIndex * staveWidth;
-        const y = startY + rowIndex * rowHeight;
-
-        const stave = new VF.Stave(x, y, staveWidth);
-
-        if (colIndex === 0) {
-          stave.addClef("treble");
-        }
-        if (idx === 0) {
-          stave.addTimeSignature(timeSignature.value).addKeySignature(keySignature.value);
-        }
-
-        if (idx === measureNums.length - 1) {
-          stave.setEndBarType(VF.Barline.type.END);
-        } else if (colIndex === measuresPerRow - 1) {
-          stave.setEndBarType(VF.Barline.type.SINGLE);
-        }
-
-        stave.setContext(context).draw();
-
-        const mNotes = notesByMeasure.value[mNum] || [];
-        const vexNotes = mNotes.map(n => {
-          const durInfo = getVexDuration(n.duration, n.is_rest);
-          const keys = n.is_rest ? ["b/4"] : [`${n.step.toLowerCase()}/${n.octave}`];
-          const staveNote = new VF.StaveNote({ clef: "treble", keys: keys, duration: durInfo.res, auto_stem: true });
-          
-          if (!n.is_rest && n.accidental) staveNote.addModifier(new VF.Accidental(n.accidental));
-          if (durInfo.dotted) staveNote.addModifier(new VF.Dot());
-          return staveNote;
-        });
-
-        if (vexNotes.length > 0) {
-          const voice = new VF.Voice({ num_beats: numBeats, beat_value: beatValue });
-          voice.setMode(VF.Voice.Mode.SOFT);
-          voice.addTickables(vexNotes);
-
-          let beams = [];
-          try {
-            beams = VF.Beam.generateBeams(vexNotes, { groups: [new VF.Fraction(1, beatValue)] });
-          } catch (e) {}
-
-          let fillPadding = 20;
-          if (colIndex === 0) fillPadding += 35;
-          if (idx === 0) fillPadding += 45;
-
-          new VF.Formatter().joinVoices([voice]).format([voice], staveWidth - fillPadding);
-          voice.draw(context, stave);
-          beams.forEach(beam => beam.setContext(context).draw());
-        }
+    watch([fingeringType, filterMode, rangeStart, rangeEnd], () => {
+      nextTick(() => {
+        renderAllVisuals();
       });
-    };
-
-    const renderAllFingerings = () => {
-      parsedNotes.value.forEach((note) => {
-        if (!note.is_rest && note.fingering) {
-          drawPencilRecorderSVG(`note-svg-${note.id}`, note.fingering[fingeringType.value]);
-        }
-      });
-    };
-
-    // 直笛與按孔 SVG (80x210 規格)
-    const drawPencilRecorderSVG = (svgId, holes) => {
-      const svg = document.getElementById(svgId);
-      if (!svg) return;
-      svg.innerHTML = '';
-      const strokeColor = "#422e23";
-      
-      const topCap = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-      topCap.setAttribute("x", "24"); topCap.setAttribute("y", "4");
-      topCap.setAttribute("width", "22"); topCap.setAttribute("height", "11");
-      topCap.setAttribute("rx", "4"); topCap.setAttribute("fill", "#e2c5a0");
-      topCap.setAttribute("stroke", strokeColor); topCap.setAttribute("stroke-width", "2.8");
-      svg.appendChild(topCap);
-
-      const body = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-      body.setAttribute("x", "21"); body.setAttribute("y", "13");
-      body.setAttribute("width", "28"); body.setAttribute("height", "172");
-      body.setAttribute("rx", "12"); body.setAttribute("fill", "#fdf3e3");
-      body.setAttribute("stroke", strokeColor); body.setAttribute("stroke-width", "3");
-      svg.appendChild(body);
-
-      const yPositions = [28, 48, 68, 88, 110, 130, 150, 168];
-
-      holes.forEach((state, idx) => {
-        const cx = idx === 0 ? 9 : 35;
-        const cy = yPositions[idx];
-        const r = (idx === 6 || idx === 7) ? 4.8 : 6.5;
-        const holeColor = idx < 4 ? "#2563eb" : "#26221f";
-
-        if (state === 0.5) {
-          const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-          const baseCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-          baseCircle.setAttribute("cx", cx); baseCircle.setAttribute("cy", cy); baseCircle.setAttribute("r", r);
-          baseCircle.setAttribute("fill", "#ffffff"); baseCircle.setAttribute("stroke", strokeColor);
-          baseCircle.setAttribute("stroke-width", "2.5");
-          g.appendChild(baseCircle);
-
-          const halfPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-          halfPath.setAttribute("d", `M ${cx} ${cy - r} A ${r} ${r} 0 0 0 ${cx} ${cy + r} Z`);
-          halfPath.setAttribute("fill", holeColor);
-          g.appendChild(halfPath);
-
-          svg.appendChild(g);
-        } else {
-          const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-          circle.setAttribute("cx", cx); circle.setAttribute("cy", cy); circle.setAttribute("r", r);
-          circle.setAttribute("stroke", strokeColor); circle.setAttribute("stroke-width", "2.5");
-          circle.setAttribute("fill", state === 1 ? holeColor : "#ffffff");
-          svg.appendChild(circle);
-        }
-      });
-    };
-
-    watch([fingeringType, filteredMeasureNumbers], () => {
-      nextTick(() => renderAllFingerings());
     });
 
     onMounted(() => {
-      parsedNotes.value = DEMO_NOTES;
-      rangeStart.value = 1;
-      rangeEnd.value = maxMeasureNumber.value;
-
-      nextTick(() => {
-        renderVexFlowMultiStave();
-        renderAllFingerings();
-      });
+      loadSampleTripletDemo();
     });
 
-    return { 
-      parsedNotes, timeSignature, keySignature, fingeringType, 
-      sortedMeasureNumbers, maxMeasureNumber, filteredMeasureNumbers, 
-      notesByMeasure, filterMode, rangeStart, rangeEnd, inputSourceType,
-      isProcessingAI, uploadedImageUrl, imageWidth, imageHeight,
-      handleFileUpload, playTone 
+    return {
+      parsedNotes, timeSignature, keySignature, fingeringType,
+      filterMode, rangeStart, rangeEnd, inputSourceType,
+      notesByMeasure, sortedMeasureNumbers, maxMeasureNumber,
+      filteredMeasureNumbers, hasTripletsDetected, selectedNoteId,
+      toastMessage, showTheoryGuide,
+      measureHasTriplet, getHoleCountText, onNoteClick, playMeasure,
+      loadSampleTripletDemo, handleFileUpload
     };
   }
 }).mount('#app');
